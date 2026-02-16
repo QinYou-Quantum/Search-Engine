@@ -194,7 +194,7 @@ Copyright (c) [Año] QinYou-Quantum (Qin Xiaoyou)
 Se concede permiso, de forma gratuita, a cualquier persona que obtenga una copia de este software y de los archivos de documentación asociados (el "Software"), para utilizar el Software sin restricción, incluyendo sin limitación los derechos a usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender copias del Software, y para permitir a las personas a las que se les proporcione el Software a hacerlo, sujeto a las siguientes condiciones:
 El aviso de copyright anterior y este aviso de permiso se incluirán en todas las copias o partes sustanciales del Software.
 EL SOFTWARE SE PROPORCIONA "TAL CUAL", SIN GARANTÍA DE NINGÚN TIPO, EXPRESA O IMPLÍCITA, INCLUYENDO PERO NO LIMITADO A GARANTÍAS DE COMERCIABILIDAD, IDONEIDAD PARA UN PROPÓSITO PARTICULAR Y NO INFRACCIÓN. EN NINGÚN CASO LOS AUTORES O TITULARES DEL COPYRIGHT SERÁN RESPONSABLES DE NINGUNA RECLAMACIÓN, DAÑOS U OTRA RESPONSABILIDAD, YA SEA EN UNA ACCIÓN DE CONTRATO, AGRAVIO O DE OTRO MODO, QUE SURJA DE O EN CONEXIÓN CON EL SOFTWARE O EL USO U OTROS TRATOS EN EL SOFTWARE.
-Français
+### Français
 Aperçu du Projet
 Search-Engine est un projet personnel d'apprentissage axé sur la création d'un prototype simplifié de moteur de recherche. Ce projet couvre les concepts fondamentaux des moteurs de recherche, y compris le crawling web, l'indexation des données, la récupération de mots-clés et les algorithmes de classement de résultats basiques.
 Fonctionnalités
@@ -249,7 +249,7 @@ Copyright (c) [Année] QinYou-Quantum (Qin Xiaoyou)
 Permission est accordée, gratuitement, à toute personne obtenant une copie de ce logiciel et des fichiers de documentation associés (le « Logiciel »), de traiter le Logiciel sans restriction, y compris sans limitation les droits d'utiliser, de copier, de modifier, de fusionner, de publier, de distribuer, de sous-licencier et/ou de vendre des copies du Logiciel, et de permettre aux personnes à qui le Logiciel est fourni de le faire, sous réserve des conditions suivantes:
 La notice de copyright ci-dessus et cette notice de permission doivent être incluses dans toutes les copies ou parties substantielles du Logiciel.
 LE LOGICIEL EST FOURNI « TEL QUEL », SANS GARANTIE D'AUCUNE SORTE, EXPRESSE OU IMPLICITE, Y COMPRIS MAIS SANS LIMITATION LES GARANTIES DE QUALITÉ MARCHANDE, D'ADÉQUATION À UN USAGE PARTICULIER ET D'ABSENCE DE CONTREFAÇON. EN AUCUN CAS, LES AUTEURS OU TITULAIRES DU DROIT D'AUTEUR NE SERONT RESPONSABLES DE TOUTE RÉCLAMATION, DOMMAGES OU AUTRE RESPONSABILITÉ, QUE CE SOIT DANS LE CADRE D'UN CONTRAT, D'UN DÉLIT OU AUTRE, DÉCOULANT DE, OU EN RELATION AVEC LE LOGICIEL OU SON UTILISATION, OU AVEC D'AUTRES ÉCHANGES DANS LE LOGICIEL.
-日本語
+### 日本語
 プロジェクト概要
 Search-Engine は、簡易的な検索エンジンプロトタイプの構築に焦点を当てた個人の学習プロジェクトです。このプロジェクトは、ウェブクローリング、データインデックス作成、キーワード検索、基本的な結果ランキングアルゴリズムなどの検索エンジンのコアコンセプトをカバーしています。
 機能
@@ -304,7 +304,7 @@ Copyright (c) [年] QinYou-Quantum (Qin Xiaoyou)
 本ソフトウェアおよび関連するドキュメントファイル（以下「ソフトウェア」）のコピーを取得するすべての人に対し、ソフトウェアの使用、コピー、変更、結合、発行、頒布、サブライセンス、および / または販売を制限なしに許可し、ソフトウェアが提供された人が同じことを行うことを許可する。ただし、次の条件に従うものとする。
 上記の著作権表示および本許可表示は、ソフトウェアのすべてのコピーまたは実質的な部分に含まれなければならない。
 本ソフトウェアは「現状有姿」で提供され、商品性、特定の目的への適合性、および非侵害に関する保証を含むがこれらに限定されない、いかなる明示的または黙示的な保証もなく提供される。いかなる場合も、著作権者または本ソフトウェアの提供者は、契約行為、不法行為、またはその他であろうと、ソフトウェアの使用またはその他の取引に起因または関連して生じるいかなる請求、損害、その他の責任についても責任を負わないものとする。
-中文
+### 中文
 项目概述
 Search-Engine 是一个以学习为导向的轻量级搜索引擎原型项目，专注于构建简易的搜索引擎核心功能。本项目涵盖网络爬虫、数据索引、关键词检索、基础结果排序算法等搜索引擎核心概念。
 核心功能
