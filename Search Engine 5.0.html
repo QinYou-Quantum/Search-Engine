@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Engine 5.0</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --card-color: #ffffff;
+            --text-color: #000000;
+            --accent-color: #4285f4;
+            --hover-color: #e0e0e0;
+            --transition: all 0.3s ease;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .dark-theme {
+            --bg-color: #121212;
+            --card-color: #1e1e1e;
+            --text-color: #ffffff;
+            --accent-color: #8ab4f8;
+            --hover-color: #333333;
+            --box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: var(--transition);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            opacity: 0.1;
+            transition: var(--transition);
+        }
+
+        .dark-theme .bg-animation {
+            opacity: 0.15;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: var(--accent-color);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-box {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            font-size: 1rem;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            outline: none;
+        }
+
+        .search-input:focus {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            bottom: 5px;
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .search-btn:hover {
+            background-color: #3367d6;
+            transform: scale(1.05);
+        }
+
+        .quick-links {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .quick-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--box-shadow);
+        }
+
+        .quick-btn:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-2px);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            box-shadow: var(--box-shadow);
+            z-index: 100;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--hover-color);
+            transform: rotate(30deg);
+        }
+
+        .settings-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            box-shadow: var(--box-shadow);
+            z-index: 100;
+        }
+
+        .settings-btn:hover {
+            background-color: var(--hover-color);
+            transform: scale(1.1);
+        }
+
+        .info-btn {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            box-shadow: var(--box-shadow);
+            z-index: 100;
+        }
+
+        .info-btn:hover {
+            background-color: var(--hover-color);
+            transform: scale(1.1);
+        }
+
+        .info-panel {
+            position: fixed;
+            bottom: 5rem;
+            right: 1rem;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: var(--box-shadow);
+            max-width: 300px;
+            transform: translateY(20px);
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            z-index: 100;
+        }
+
+        .info-panel.active {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            z-index: 200;
+        }
+
+        .settings-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .settings-content {
+            background-color: var(--card-color);
+            color: var(--text-color);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            transform: scale(0.9);
+            transition: var(--transition);
+        }
+
+        .settings-modal.active .settings-content {
+            transform: scale(1);
+        }
+
+        .setting-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .setting-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: var(--transition);
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: var(--transition);
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--accent-color);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 0.5rem;
+        }
+
+        .file-label:hover {
+            background-color: #3367d6;
+        }
+
+        .copyright {
+            margin-top: 2rem;
+            color: var(--text-color);
+            opacity: 0.7;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .search-suggestions-container {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            margin-top: 0.5rem;
+        }
+
+        .search-suggestions {
+            width: 100%;
+            background-color: var(--card-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            max-height: 0;
+        }
+
+        .search-suggestions.active {
+            opacity: 1;
+            transform: translateY(0);
+            max-height: 500px;
+        }
+
+        .suggestions-header {
+            padding: 0.8rem 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.7;
+            border-bottom: 1px solid var(--hover-color);
+        }
+
+        .suggestion-item {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .suggestion-item:hover {
+            background-color: var(--hover-color);
+        }
+
+        .suggestion-item::after {
+            content: '';
+            position: absolute;
+            left: 1.5rem;
+            right: 1.5rem;
+            bottom: 0;
+            height: 1px;
+            background-color: var(--hover-color);
+            opacity: 0.5;
+        }
+
+        .suggestion-item:last-child::after {
+            display: none;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close-settings {
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            cursor: pointer;
+            font-size: 1.2rem;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    
+    <button class="theme-toggle" id="themeToggle">🌓</button>
+    <button class="settings-btn" id="settingsBtn">⚙️</button>
+    <button class="info-btn" id="infoBtn">ℹ️</button>
+    
+    <div class="info-panel" id="infoPanel">
+        去你的***我已经尽力了......但是接入Bing的搜索推荐API是要钱的。
+    </div>
+    
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <button class="close-settings" id="closeSettings">×</button>
+            <h2 style="margin-bottom: 1.5rem;">Settings</h2>
+            
+            <div class="setting-item">
+                <div class="setting-title">Custom Wallpaper</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="customBgToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                <input type="file" id="bgUpload" class="file-input" accept="image/*">
+                <label for="bgUpload" class="file-label" id="bgUploadLabel">Upload Image</label>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-title">Search Recommendations</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="searchRecommendToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="logo">Search Engine</div>
+        
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search with Bing...">
+            <button class="search-btn" id="searchBtn">🔍</button>
+        </div>
+        
+        <div class="search-suggestions-container">
+            <div class="search-suggestions" id="searchSuggestions">
+                <div class="suggestions-header">Recommended Searches</div>
+            </div>
+        </div>
+        
+        <div class="quick-links">
+            <button class="quick-btn" onclick="window.open('https://www.douyin.com', '_blank')">Douyin</button>
+            <button class="quick-btn" onclick="window.open('https://bilibili.com', '_blank')">Bilibili</button>
+        </div>
+        
+        <div class="copyright">&copy; 2026 Qin_Xiaoyou Lightweight Search Engine</div>
+    </div>
+
+    <script>
+        class SearchEngine {
+            constructor() {
+                this.loadSettings();
+                this.initTheme();
+                this.bindEvents();
+                this.initBg();
+                this.animationFrameId = null;
+            }
+
+            loadSettings() {
+                const settings = localStorage.getItem('searchEngineSettings');
+                this.settings = settings ? JSON.parse(settings) : {
+                    theme: 'light',
+                    customBgEnabled: false,
+                    searchRecommendEnabled: true,
+                    bgImage: null
+                };
+            }
+
+            saveSettings() {
+                localStorage.setItem('searchEngineSettings', JSON.stringify(this.settings));
+            }
+
+            initTheme() {
+                if (this.settings.theme === 'dark') {
+                    document.body.classList.add('dark-theme');
+                }
+            }
+
+            bindEvents() {
+                document.getElementById('themeToggle').addEventListener('click', () => {
+                    document.body.classList.toggle('dark-theme');
+                    this.settings.theme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+                    this.saveSettings();
+                });
+
+                document.getElementById('settingsBtn').addEventListener('click', () => {
+                    document.getElementById('settingsModal').classList.add('active');
+                    document.getElementById('customBgToggle').checked = this.settings.customBgEnabled;
+                    document.getElementById('searchRecommendToggle').checked = this.settings.searchRecommendEnabled;
+                });
+
+                document.getElementById('closeSettings').addEventListener('click', () => {
+                    document.getElementById('settingsModal').classList.remove('active');
+                });
+
+                document.getElementById('customBgToggle').addEventListener('change', (e) => {
+                    this.settings.customBgEnabled = e.target.checked;
+                    this.saveSettings();
+                    this.initBg();
+                });
+
+                document.getElementById('bgUpload').addEventListener('change', (e) => {
+                    if (e.target.files && e.target.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            this.settings.bgImage = event.target.result;
+                            this.saveSettings();
+                            if (this.settings.customBgEnabled) {
+                                this.applyCustomBg();
+                            }
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                    }
+                });
+
+
+                document.getElementById('searchRecommendToggle').addEventListener('change', (e) => {
+                    this.settings.searchRecommendEnabled = e.target.checked;
+                    this.saveSettings();
+                    if (!e.target.checked) {
+                        this.hideSuggestions();
+                    }
+                });
+
+                document.getElementById('searchBtn').addEventListener('click', this.performSearch.bind(this));
+                document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.performSearch();
+                });
+
+                document.getElementById('searchInput').addEventListener('input', this.debounce(this.showSuggestions.bind(this), 200));
+                document.getElementById('searchInput').addEventListener('focus', () => {
+                    if (document.getElementById('searchInput').value.trim() && this.settings.searchRecommendEnabled) {
+                        this.showSuggestions();
+                    }
+                });
+
+                document.getElementById('infoBtn').addEventListener('click', () => {
+                    document.getElementById('infoPanel').classList.toggle('active');
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.settings-content') && !e.target.closest('#settingsBtn')) {
+                        document.getElementById('settingsModal').classList.remove('active');
+                    }
+                    if (!e.target.closest('.info-panel') && !e.target.closest('#infoBtn')) {
+                        document.getElementById('infoPanel').classList.remove('active');
+                    }
+                    if (!e.target.closest('.search-suggestions-container') && !e.target.closest('.search-input')) {
+                        this.hideSuggestions();
+                    }
+                });
+            }
+
+            initBg() {
+                if (this.settings.customBgEnabled && this.settings.bgImage) {
+                    this.applyCustomBg();
+                } else {
+                    document.querySelector('.bg-animation').style.backgroundImage = 'linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab)';
+                }
+            }
+
+            applyCustomBg() {
+                if (this.settings.bgImage) {
+                    document.querySelector('.bg-animation').style.backgroundImage = `url(${this.settings.bgImage})`;
+                    document.querySelector('.bg-animation').style.backgroundSize = 'cover';
+                    document.querySelector('.bg-animation').style.backgroundPosition = 'center';
+                    document.querySelector('.bg-animation').style.opacity = '0.3';
+                }
+            }
+
+            performSearch() {
+                const query = document.getElementById('searchInput').value.trim();
+                if (query) {
+                    window.open(`https://www.bing.com/search?q=${encodeURIComponent(query)}`, '_blank');
+                    this.hideSuggestions();
+                }
+            }
+
+            showSuggestions() {
+                const query = document.getElementById('searchInput').value.trim();
+                const suggestionsContainer = document.getElementById('searchSuggestions');
+                
+                if (!query || !this.settings.searchRecommendEnabled) {
+                    this.hideSuggestions();
+                    return;
+                }
+
+                if (this.animationFrameId) {
+                    cancelAnimationFrame(this.animationFrameId);
+                }
+
+                const mockSuggestions = [
+                    `${query} definition`,
+                    `${query} news`,
+                    `${query} near me`,
+                    `best ${query}`,
+                    `how to ${query}`,
+                    `${query} 2026`,
+                    `${query} tutorial`
+                ];
+
+                suggestionsContainer.innerHTML = '<div class="suggestions-header">Recommended Searches</div>';
+                
+                mockSuggestions.forEach((suggestion, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.textContent = suggestion;
+                    div.addEventListener('click', () => {
+                        document.getElementById('searchInput').value = suggestion;
+                        this.performSearch();
+                    });
+                    
+                    setTimeout(() => {
+                        div.style.opacity = '0';
+                        div.style.transform = 'translateY(10px)';
+                        suggestionsContainer.appendChild(div);
+                        
+                        void div.offsetWidth;
+                        
+                        div.style.opacity = '1';
+                        div.style.transform = 'translateY(0)';
+                    }, index * 50);
+                });
+
+                suggestionsContainer.classList.add('active');
+            }
+
+            hideSuggestions() {
+                const suggestionsContainer = document.getElementById('searchSuggestions');
+                suggestionsContainer.classList.remove('active');
+                
+                if (this.animationFrameId) {
+                    cancelAnimationFrame(this.animationFrameId);
+                }
+            }
+
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new SearchEngine();
+            
+            setTimeout(() => {
+                document.querySelector('.container').style.opacity = '1';
+            }, 100);
+        });
+
+        document.addEventListener('submit', (e) => {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>

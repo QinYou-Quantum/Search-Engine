@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-width=1.0">
+    <title>Liquid Search Engine</title>
+    <style>
+        :root {
+            --primary: #4285f4;
+            --primary-dark: #3367d6;
+            --bg-light: #f5f7fa;
+            --bg-dark: #121212;
+            --text-light: #333;
+            --text-dark: #f1f1f1;
+            --surface-light: #ffffff;
+            --surface-dark: #1e1e1e;
+            --border-light: #e0e0e0;
+            --border-dark: #333;
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            --radius: 16px;
+            --gradient-light: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --gradient-dark: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Google Sans', 'Segoe UI', Roboto, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-x: hidden;
+            background: var(--gradient-light);
+            transition: var(--transition);
+        }
+
+        body.dark {
+            background: var(--gradient-dark);
+        }
+
+        .bg-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(66, 133, 244, 0.15);
+            animation: float 15s infinite linear;
+        }
+
+        .dark .particle {
+            background: rgba(66, 133, 244, 0.1);
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) translateX(0) scale(0.5);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.8;
+            }
+            80% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100px) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+        }
+
+        .header {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 2rem;
+            animation: slideDown 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.7);
+            border: none;
+            cursor: pointer;
+            padding: 0.6rem;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .dark .btn {
+            background: rgba(30, 30, 30, 0.7);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-toggle {
+            font-size: 1.3rem;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 2.5rem;
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 0.6s ease-out 0.3s forwards;
+            text-shadow: 0 2px 10px rgba(66, 133, 244, 0.2);
+        }
+
+        .content-container {
+            width: 100%;
+            position: relative;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .search-container {
+            width: 100%;
+            margin-bottom: 2.5rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) 0.5s forwards;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .manual-container {
+            width: 100%;
+            margin-bottom: 2.5rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: var(--radius);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: var(--transition);
+        }
+
+        .dark .manual-container {
+            background: rgba(30, 30, 30, 0.8);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .manual-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-light);
+            white-space: pre-wrap;
+        }
+
+        .dark .manual-content {
+            color: var(--text-dark);
+        }
+
+        .manual-toggle {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 1rem;
+            text-decoration: underline;
+            transition: var(--transition);
+            padding: 0.5rem;
+            margin-top: 1rem;
+            opacity: 0;
+            animation: fadeIn 0.6s ease-out 1s forwards;
+        }
+
+        .manual-toggle:hover {
+            color: var(--primary-dark);
+            text-decoration: none;
+        }
+
+        .search-wrapper {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-box {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1.2rem 2rem;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            color: var(--text-light);
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            flex: 1;
+        }
+
+        .dark .search-input {
+            background: rgba(30, 30, 30, 0.8);
+            color: var(--text-dark);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.3);
+            border-color: rgba(66, 133, 244, 0.5);
+        }
+
+        .search-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            padding: 0.6rem 1.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            margin-left: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .search-button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+        }
+
+        .shortcuts {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            width: 100%;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeUp 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) 0.7s forwards;
+        }
+
+        .shortcut-btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            background: var(--primary);
+            color: white;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.95rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            min-width: 120px;
+        }
+
+        .shortcut-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);
+        }
+
+        .footer {
+            margin-top: auto;
+            padding: 1.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+            opacity: 0;
+            animation: fadeIn 0.6s ease-out 1s forwards;
+        }
+
+        .dark .footer {
+            color: #888;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .search-input {
+                padding: 1rem 1.5rem;
+                width: 100%;
+            }
+
+            .search-button {
+                margin-left: 0;
+                margin-top: 1rem;
+                width: auto;
+            }
+
+            .shortcuts {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .shortcut-btn {
+                width: 70%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-particles" id="particles"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="controls">
+                <button class="btn theme-toggle" aria-label="Toggle theme">🌓</button>
+            </div>
+        </div>
+
+        <h1 class="logo">Liquid Search Engine</h1>
+
+        <div class="content-container">
+            <div class="search-container" id="search-container">
+                <div class="search-wrapper">
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="Search the web with Bing...">
+                        <button class="search-button">Search</button>
+                    </div>
+                </div>
+                
+                <div class="shortcuts">
+                    <button class="shortcut-btn" id="douyin-btn">TikTok</button>
+                </div>
+            </div>
+
+            <div class="manual-container" id="manual-container">
+                <h2 style="margin-bottom: 1rem; color: var(--primary);">Author's message</h2>
+                <div class="manual-content">https://github.com/qinyou-quantum</div>
+            </div>
+        </div>
+
+        <button class="manual-toggle" id="manual-toggle">TS-Author's message</button>
+    </div>
+
+    <div class="footer">
+        © 2026 Qin_Xiaoyou Lightweight Search Engine
+    </div>
+
+    <script>
+        const themeToggle = document.querySelector('.theme-toggle');
+        const body = document.body;
+        
+        function checkThemePreference() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                body.classList.add('dark');
+                themeToggle.textContent = '☀️';
+            } else {
+                body.classList.remove('dark');
+                themeToggle.textContent = '🌓';
+            }
+        }
+
+        checkThemePreference();
+
+        themeToggle.addEventListener('click', function() {
+            body.classList.toggle('dark');
+            
+            if (body.classList.contains('dark')) {
+                this.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                this.textContent = '🌓';
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        const manualToggle = document.getElementById('manual-toggle');
+        const searchContainer = document.getElementById('search-container');
+        const manualContainer = document.getElementById('manual-container');
+        let isManualVisible = false;
+
+        manualToggle.addEventListener('click', function() {
+            isManualVisible = !isManualVisible;
+            
+            if (isManualVisible) {
+                searchContainer.style.opacity = '0';
+                searchContainer.style.pointerEvents = 'none';
+                manualContainer.style.display = 'block';
+                
+                setTimeout(() => {
+                    manualContainer.style.opacity = '1';
+                    manualContainer.style.transform = 'translateY(0)';
+                }, 10);
+                
+                manualToggle.textContent = 'Back to Search';
+            } else {
+                manualContainer.style.opacity = '0';
+                manualContainer.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    manualContainer.style.display = 'none';
+                    searchContainer.style.opacity = '1';
+                    searchContainer.style.pointerEvents = 'auto';
+                }, 300);
+                
+                manualToggle.textContent = 'Show Manual';
+            }
+        });
+
+        document.querySelector('.search-button').addEventListener('click', function() {
+            const query = document.querySelector('.search-input').value.trim();
+            if (query) {
+                const bingSearchUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+                window.location.href = bingSearchUrl;
+            }
+        });
+
+        document.querySelector('.search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.querySelector('.search-button').click();
+            }
+        });
+
+        document.getElementById('douyin-btn').addEventListener('click', function() {
+            window.open('https://www.douyin.com/?recommend=1', '_blank');
+        });
+
+        document.getElementById('baidu-btn').addEventListener('click', function() {
+            window.open('https://github.com/qinyou-quantum', '_blank');
+        });
+
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 20;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const size = Math.random() * 15 + 5;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                
+                particle.style.animationDuration = `${Math.random() * 15 + 10}s`;
+                
+                particle.style.opacity = Math.random() * 0.5 + 0.3;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        window.addEventListener('load', createParticles);
+    </script>
+</body>
+</html>

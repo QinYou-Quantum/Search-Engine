@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarch Engine4.5 Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --bg-input: #ffffff;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --accent: #4285f4;
+            --accent-hover: #3367d6;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition-speed: 0.7s;
+            --cubic-bezier: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .dark-theme {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-input: #252525;
+            --text-primary: #f0f0f0;
+            --text-secondary: #b3b3b3;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: background-color var(--transition-speed) var(--cubic-bezier);
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            opacity: 0;
+            transform: translateY(-30px);
+            animation: headerEntrance 1.2s var(--cubic-bezier) 0.1s forwards;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #4285f4, #34a853, #ea4335, #fbbc05);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .logo::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--accent);
+            animation: underline 1.5s var(--cubic-bezier) 1.3s forwards;
+        }
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.4s var(--cubic-bezier);
+            opacity: 0;
+            transform: scale(0.8);
+            animation: buttonEntrance 0.8s var(--cubic-bezier) 0.5s forwards;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05) rotate(15deg);
+        }
+
+        .theme-toggle i {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 30px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: searchEntrance 1s var(--cubic-bezier) 0.8s forwards;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 18px 60px 18px 24px;
+            background-color: var(--bg-input);
+            border: 2px solid var(--bg-secondary);
+            border-radius: 50px;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            box-shadow: var(--shadow);
+            transition: all 0.4s var(--cubic-bezier);
+            opacity: 0;
+            transform: scale(0.95);
+            animation: inputEntrance 0.8s var(--cubic-bezier) 1s forwards;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.2);
+            transform: scale(1.02);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 6px;
+            top: 6px;
+            width: 48px;
+            height: 48px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.4s var(--cubic-bezier);
+            opacity: 0;
+            transform: scale(0.5);
+            animation: buttonEntrance 0.8s var(--cubic-bezier) 1.2s forwards;
+        }
+
+        .search-btn:hover {
+            background-color: var(--accent-hover);
+            transform: scale(1.05) rotate(5deg);
+        }
+
+        .search-btn:active {
+            transform: scale(0.95) rotate(0deg);
+        }
+
+        .search-btn i {
+            font-size: 1.2rem;
+        }
+
+        .settings-panel {
+            background-color: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: panelEntrance 1s var(--cubic-bezier) 1.4s forwards;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--bg-input);
+            transform: translateX(-20px);
+            opacity: 0;
+            animation: slideIn 0.6s var(--cubic-bezier) 1.8s forwards;
+        }
+
+        .settings-header h2 {
+            font-size: 1.3rem;
+            color: var(--text-primary);
+        }
+
+        .settings-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.4s var(--cubic-bezier);
+            opacity: 0;
+            transform: rotate(-90deg);
+            animation: rotateIn 0.8s var(--cubic-bezier) 2s forwards;
+        }
+
+        .settings-toggle:hover {
+            color: var(--text-primary);
+            transform: rotate(0deg);
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--bg-input);
+            transform: translateX(-30px);
+            opacity: 0;
+            animation: slideIn 0.6s var(--cubic-bezier) forwards;
+        }
+
+        .setting-item:nth-child(2) { animation-delay: 2.1s; }
+        .setting-item:nth-child(3) { animation-delay: 2.2s; }
+        .setting-item:nth-child(4) { animation-delay: 2.3s; }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .setting-label i {
+            color: var(--accent);
+            width: 20px;
+            text-align: center;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-input);
+            transition: all 0.4s var(--cubic-bezier);
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-secondary);
+            transition: all 0.4s var(--cubic-bezier);
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+            background-color: white;
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            opacity: 0;
+            animation: fadeIn 0.8s var(--cubic-bezier) 2.5s forwards;
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.4s var(--cubic-bezier);
+            display: inline-block;
+        }
+
+        .footer a:hover {
+            color: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .copyright {
+            margin-top: 15px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            opacity: 0;
+            animation: fadeIn 0.8s var(--cubic-bezier) 2.7s forwards;
+        }
+
+        @keyframes headerEntrance {
+            0% { opacity: 0; transform: translateY(-30px); }
+            40% { opacity: 1; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes searchEntrance {
+            0% { opacity: 0; transform: translateY(30px); }
+            40% { opacity: 0.5; transform: translateY(-5px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes buttonEntrance {
+            0% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes inputEntrance {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes panelEntrance {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes rotateIn {
+            to { opacity: 1; transform: rotate(0deg); }
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        @keyframes underline {
+            to { width: 100%; }
+        }
+
+        @media (max-width: 600px) {
+            .logo {
+                font-size: 1.8rem;
+            }
+            
+            .search-input {
+                padding: 16px 50px 16px 20px;
+            }
+            
+            .search-btn {
+                width: 42px;
+                height: 42px;
+            }
+            
+            .settings-panel {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Sarch Engine4.5 Pro</div>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        
+        <form class="search-box" action="https://www.bing.com/search" method="get" target="_blank">
+            <input type="text" class="search-input" name="q" placeholder="Search the web..." autocomplete="off" required>
+            <button type="submit" class="search-btn">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+        
+        <div class="settings-panel">
+            <div class="settings-header">
+                <h2>Search Settings</h2>
+                <button class="settings-toggle" id="settingsToggle">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>SafeSearch</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="safesearch" value="on" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <i class="fas fa-window-restore"></i>
+                    <span>New Tab</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="newtab" value="on" checked id="newTabToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <i class="fas fa-globe-americas"></i>
+                    <span>Region</span>
+                </div>
+                <select name="cc" class="region-select" style="background: var(--bg-input); color: var(--text-primary); border: none; border-radius: 12px; padding: 6px 12px;">
+                    <option value="US">United States</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="JP">Japan</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                    <option value="IN">India</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Powered by <a href="https://www.bing.com" target="_blank">Bing</a> | 
+            <a href="#" id="settingsLink">Settings</a></p>
+        </div>
+        
+        <div class="copyright">&copy; 2026 Qin_Xiaoyou Lightweight Search Engine4.5 Pro</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = themeToggle.querySelector('i');
+            const body = document.body;
+            
+            setTimeout(() => {
+                themeToggle.style.pointerEvents = 'auto';
+            }, 1500);
+            
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                body.classList.add('dark-theme');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            }
+            
+            themeToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                themeToggle.style.transform = 'scale(0.9) rotate(180deg)';
+                setTimeout(() => {
+                    body.classList.toggle('dark-theme');
+                    
+                    if (body.classList.contains('dark-theme')) {
+                        themeIcon.classList.remove('fa-moon');
+                        themeIcon.classList.add('fa-sun');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        themeIcon.classList.remove('fa-sun');
+                        themeIcon.classList.add('fa-moon');
+                        localStorage.setItem('theme', 'light');
+                    }
+                    
+                    setTimeout(() => {
+                        themeToggle.style.transform = '';
+                    }, 300);
+                }, 300);
+            });
+            
+            const settingsToggle = document.getElementById('settingsToggle');
+            const settingsPanel = document.querySelector('.settings-panel');
+            const settingsLink = document.getElementById('settingsLink');
+            let isPanelOpen = false;
+            
+            function toggleSettings(e) {
+                if (e) e.preventDefault();
+                
+                isPanelOpen = !isPanelOpen;
+                
+                if (isPanelOpen) {
+                    settingsPanel.style.maxHeight = '500px';
+                    settingsPanel.style.opacity = '1';
+                } else {
+                    settingsPanel.style.maxHeight = '0';
+                    settingsPanel.style.opacity = '0';
+                }
+                
+                settingsToggle.style.transform = isPanelOpen ? 'rotate(90deg)' : 'rotate(0deg)';
+            }
+            
+            settingsToggle.addEventListener('click', toggleSettings);
+            settingsLink.addEventListener('click', toggleSettings);
+            
+            const searchInput = document.querySelector('.search-input');
+            searchInput.addEventListener('focus', () => {
+                searchInput.style.transform = 'scale(1.02)';
+            });
+            
+            searchInput.addEventListener('blur', () => {
+                searchInput.style.transform = 'scale(1)';
+            });
+            
+            const newTabToggle = document.getElementById('newTabToggle');
+            const searchForm = document.querySelector('.search-box');
+            
+            newTabToggle.addEventListener('change', function() {
+                searchForm.setAttribute('target', this.checked ? '_blank' : '_self');
+                
+                this.parentElement.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.parentElement.style.transform = '';
+                }, 200);
+            });
+            
+            searchForm.setAttribute('target', '_blank');
+            
+            const regionSelect = document.querySelector('.region-select');
+            regionSelect.addEventListener('focus', () => {
+                regionSelect.style.transform = 'scale(1.02)';
+                regionSelect.style.boxShadow = '0 0 0 2px rgba(66, 133, 244, 0.3)';
+            });
+            
+            regionSelect.addEventListener('blur', () => {
+                regionSelect.style.transform = '';
+                regionSelect.style.boxShadow = '';
+            });
+        });
+    </script>
+</body>
+</html>

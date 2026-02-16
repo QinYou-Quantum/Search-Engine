@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Engine2.0</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-primary: #121212;
+      --bg-secondary: #1e1e1e;
+      --accent: #6366f1;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--bg-primary), #000);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      overflow: hidden;
+      color: var(--text-primary);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 640px;
+      padding: 0 24px;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeInUp 0.8s ease-out 0.2s forwards;
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+      opacity: 0;
+      animation: fadeIn 0.8s ease-out 0.6s forwards;
+    }
+
+    .logo i {
+      font-size: 3.5rem;
+      color: var(--accent);
+      margin-bottom: 16px;
+      filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
+    }
+
+    .logo h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #8b5cf6, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    .search-box {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    input {
+      width: 100%;
+      padding: 18px 24px;
+      padding-right: 80px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 50px;
+      background: rgba(30, 30, 30, 0.8);
+      color: var(--text-primary);
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+      outline: none;
+      transition: var(--transition);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    input:focus {
+      background: rgba(40, 40, 40, 0.9);
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      border-radius: 16px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      overflow: hidden;
+      position: relative;
+    }
+
+    button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.6s;
+    }
+
+    button:hover {
+      background: #2d2d2d;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+    }
+
+    button:hover::before {
+      transform: translateX(100%);
+    }
+
+    button:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .search-btn {
+      background: var(--accent);
+    }
+
+    .search-btn:hover {
+      background: #5855e0;
+      box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
+    }
+
+    .hint {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-top: 24px;
+      opacity: 0;
+      animation: fadeIn 0.8s ease-out 1s forwards;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 0 16px;
+      }
+      
+      .logo h1 {
+        font-size: 1.8rem;
+      }
+      
+      input {
+        padding: 16px 20px;
+        padding-right: 70px;
+        font-size: 1rem;
+      }
+      
+      button {
+        padding: 14px;
+        font-size: 0.95rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .buttons {
+        flex-direction: column;
+      }
+      
+      .logo i {
+        font-size: 2.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <i class="fas fa-search"></i>
+      <h1>Search Engine2.0</h1>
+    </div>
+    
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="Search：" autocomplete="off">
+    </div>
+    
+    <div class="buttons">
+      <button id="visit-btn">
+        <i class="fas fa-external-link-alt"></i>
+        Visit URL
+      </button>
+      <button class="search-btn" id="search-btn">
+        <i class="fas fa-search"></i>
+        Search
+      </button>
+    </div>
+    
+    <div class="hint">
+      <p>
+      </p>&copy; 2026 Qin_Xiaoyou Lightweight Search Engine2.0
+    </div>
+  </div>
+
+  <script>
+    const searchInput = document.getElementById('search-input');
+    const visitBtn = document.getElementById('visit-btn');
+    const searchBtn = document.getElementById('search-btn');
+
+    function isValidUrl(string) {
+      try {
+        new URL(string);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function handleVisit() {
+      const input = searchInput.value.trim();
+      if (!input) return;
+
+      if (isValidUrl(input)) {
+        window.open(input, '_blank');
+      } else {
+        window.open('https://' + input, '_blank');
+      }
+    }
+
+    function handleSearch() {
+      const query = searchInput.value.trim();
+      if (!query) return;
+      
+      const searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+      window.open(searchUrl, '_blank');
+    }
+
+    visitBtn.addEventListener('click', handleVisit);
+    searchBtn.addEventListener('click', handleSearch);
+
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        if (e.shiftKey) {
+          handleSearch();
+        } else {
+          handleVisit();
+        }
+      }
+    });
+
+    searchInput.focus();
+  </script>
+</body>
+</html>

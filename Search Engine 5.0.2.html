@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Engine 5.0.2</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4285f4;
+            --bg: #ffffff;
+            --surface: #ffffff;
+            --text: #202124;
+            --text-secondary: #5f6368;
+            --border: #dfe1e5;
+            --shadow: 0 1px 6px rgba(32,33,36,0.28);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dark-theme {
+            --primary: #8ab4f8;
+            --bg: #121212;
+            --surface: #1e1e1e;
+            --text: #e8eaed;
+            --text-secondary: #9aa0a6;
+            --border: #3c4043;
+            --shadow: 0 1px 6px rgba(0,0,0,0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: var(--transition);
+        }
+
+        .bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .dynamic-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            opacity: 0.5;
+            transition: opacity 1s ease;
+        }
+
+        .custom-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .custom-bg.active {
+            opacity: 0.5;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .logo {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, var(--primary), #ea4335);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .search-group {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease-out 0.2s forwards;
+            opacity: 0;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 16px;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            outline: none;
+        }
+
+        .search-box:focus {
+            box-shadow: 0 1px 12px rgba(32,33,36,0.4);
+            border-color: var(--primary);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(66,133,244,0.3);
+        }
+
+        .suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: var(--surface);
+            border-radius: 0 0 24px 24px;
+            box-shadow: var(--shadow);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            opacity: 0;
+            transform: translateY(-10px);
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .suggestions.active {
+            opacity: 1;
+            transform: translateY(0);
+            visibility: visible;
+        }
+
+        .suggestion-item {
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-item:hover {
+            background: rgba(0,0,0,0.05);
+        }
+
+        .dark-theme .suggestion-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .quick-links {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out 0.4s forwards;
+            opacity: 0;
+        }
+
+        .quick-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .quick-link:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            animation: fadeInUp 0.8s ease-out 0.6s forwards;
+            opacity: 0;
+        }
+
+        .action-btn {
+            position: fixed;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: var(--transition);
+            z-index: 1000;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow);
+        }
+
+        .theme-toggle {
+            top: 20px;
+            left: 20px;
+        }
+
+        .settings-btn {
+            top: 20px;
+            right: 20px;
+        }
+
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100%;
+            background: var(--surface);
+            box-shadow: -2px 0 20px rgba(0,0,0,0.2);
+            z-index: 1001;
+            padding: 30px;
+            transition: right 0.5s cubic-bezier(0.34,1.56,0.64,1);
+            overflow-y: auto;
+        }
+
+        .settings-panel.active {
+            right: 0;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .settings-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .close-settings {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .close-settings:hover {
+            transform: scale(1.2);
+        }
+
+        .setting-item {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .setting-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background: var(--primary);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .upload-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
+            border: none;
+            margin-top: 10px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66,133,244,0.3);
+        }
+
+        #bgUpload {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2.5rem;
+            }
+            
+            .settings-panel {
+                width: 100%;
+                right: -100%;
+            }
+            
+            .quick-links {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-container">
+        <div class="dynamic-bg" id="dynamicBg"></div>
+        <img class="custom-bg" id="customBg" alt="Custom Background">
+    </div>
+    
+    <button class="action-btn theme-toggle" id="themeToggle">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+    
+    <button class="action-btn settings-btn" id="settingsBtn">
+        <i class="fas fa-cog"></i>
+    </button>
+    
+    <div class="container">
+        <h1 class="logo">Search Engine</h1>
+        
+        <div class="search-group">
+            <input type="text" class="search-box" id="searchBox" placeholder="Search the web..." autocomplete="off">
+            <button class="search-btn" id="searchBtn">
+                <i class="fas fa-search"></i> Search
+            </button>
+            
+            <div class="suggestions" id="suggestionsBox">
+            </div>
+        </div>
+        
+        <div class="quick-links">
+            <a href="https://github.com" target="_blank" class="quick-link">
+                <i class="fab fa-github"></i> Github
+            </a>
+            <a href="https://tiktok.com" target="_blank" class="quick-link">
+                <i class="fab fa-tiktok"></i> Tiktok
+            </a>
+            <a href="https://youtube.com" target="_blank" class="quick-link">
+                <i class="fab fa-youtube"></i>Youtube 
+            </a>
+            <a href="https://facebook.com" target="_blank" class="quick-link">
+                <i class="fab fa-facebook"></i>Facebook 
+            </a>
+            <a href="https://www.sotwe.com" target="_blank" class="quick-link">
+                <i class="fab fa-twitter"></i>Twitter
+            </a>
+            <a href="https://bilibili.com" target="_blank" class="quick-link">
+                <i class="fab fa-bilibili"></i>Bilibili
+            </a>
+            <a href="https://microsoft.com" target="_blank" class="quick-link">
+                <i class="fab fa-microsoft"></i>Microsoft
+            </a>
+            <a href="https://cwo.cc/musicc" target="_blank" class="quick-link">
+                <i class="fab fa-windows"></i>Music
+            </a>
+            <a href="https://minecraft.com" target="_blank" class="quick-link">
+                <i class="fab fa-mcmod"></i>Minecraft
+            </a>
+        </div>
+        
+        <div class="footer">
+            &copy; 2026 Qin_Xiaoyou Lightweight Search Engine
+        </div>
+    </div>
+    
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h2 class="settings-title"><i class="fas fa-sliders-h"></i> Settings</h2>
+            <button class="close-settings" id="closeSettings">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="setting-item">
+            <div class="setting-title">
+                <i class="fas fa-image"></i> Custom Background
+            </div>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                Upload a custom image to replace the default animated background.
+            </p>
+            <input type="file" id="bgUpload" accept="image/*">
+            <button class="upload-btn" id="uploadBtn">Upload Image</button>
+            <div style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 14px;">Use default background</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="defaultBgToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="setting-item">
+            <div class="setting-title">
+                <i class="fas fa-lightbulb"></i> Search Suggestions
+            </div>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                Show relevant search suggestions as you type.
+            </p>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 14px;">Enable suggestions</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="suggestionsToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const closeSettings = document.getElementById('closeSettings');
+        const searchBox = document.getElementById('searchBox');
+        const searchBtn = document.getElementById('searchBtn');
+        const suggestionsBox = document.getElementById('suggestionsBox');
+        const dynamicBg = document.getElementById('dynamicBg');
+        const customBg = document.getElementById('customBg');
+        const bgUpload = document.getElementById('bgUpload');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const defaultBgToggle = document.getElementById('defaultBgToggle');
+        const suggestionsToggle = document.getElementById('suggestionsToggle');
+
+        const sampleSuggestions = [
+            "best programming tutorials",
+            "how to learn AI",
+            "latest technology news",
+            "healthy recipes",
+            "travel destinations",
+            "movie recommendations",
+            "fitness workouts",
+            "business ideas",
+            "art tutorials",
+            "music recommendations"
+        ];
+
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem('searchEngineSettings')) || {};
+            
+            if (settings.theme === 'dark') {
+                document.body.classList.add('dark-theme');
+                themeIcon.className = 'fas fa-sun';
+            }
+            
+            if (settings.customBg) {
+                customBg.src = settings.customBg;
+                customBg.classList.add('active');
+                dynamicBg.style.opacity = '0';
+                defaultBgToggle.checked = false;
+            }
+            
+            if (settings.suggestionsEnabled !== undefined) {
+                suggestionsToggle.checked = settings.suggestionsEnabled;
+            }
+            
+            if (settings.useDefaultBg !== undefined) {
+                defaultBgToggle.checked = settings.useDefaultBg;
+                if (settings.useDefaultBg && settings.customBg) {
+                    customBg.classList.remove('active');
+                    dynamicBg.style.opacity = '0.5';
+                }
+            }
+        }
+
+        function saveSettings() {
+            const settings = {
+                theme: document.body.classList.contains('dark-theme') ? 'dark' : 'light',
+                customBg: customBg.src || null,
+                suggestionsEnabled: suggestionsToggle.checked,
+                useDefaultBg: defaultBgToggle.checked
+            };
+            
+            localStorage.setItem('searchEngineSettings', JSON.stringify(settings));
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList.contains('dark-theme');
+            themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            saveSettings();
+        }
+
+        function showSuggestions(query) {
+            if (!query || !suggestionsToggle.checked) {
+                suggestionsBox.classList.remove('active');
+                return;
+            }
+
+            const filtered = sampleSuggestions.filter(suggestion => 
+                suggestion.toLowerCase().includes(query.toLowerCase())
+            );
+
+            if (filtered.length === 0) {
+                suggestionsBox.classList.remove('active');
+                return;
+            }
+
+            suggestionsBox.innerHTML = filtered.map(suggestion => 
+                `<div class="suggestion-item">${suggestion}</div>`
+            ).join('');
+
+            document.querySelectorAll('.suggestion-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    searchBox.value = item.textContent;
+                    performSearch();
+                });
+            });
+
+            suggestionsBox.classList.add('active');
+        }
+
+        function performSearch() {
+            const query = searchBox.value.trim();
+            if (query) {
+                window.open(`https://www.bing.com/search?q=${encodeURIComponent(query)}`, '_self');
+            }
+        }
+
+        function handleBackgroundUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (customBg.classList.contains('active')) {
+                        customBg.style.opacity = '0';
+                    } else {
+                        dynamicBg.style.opacity = '0';
+                    }
+
+                    setTimeout(() => {
+                        customBg.src = e.target.result;
+                        customBg.classList.add('active');
+                        customBg.style.opacity = '0';
+                        
+                        setTimeout(() => {
+                            customBg.style.opacity = '0.5';
+                        }, 50);
+                    }, 300);
+
+                    saveSettings();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function toggleDefaultBackground() {
+            const useDefault = defaultBgToggle.checked;
+            
+            if (useDefault) {
+                customBg.classList.remove('active');
+                dynamicBg.style.opacity = '0.5';
+            } else if (customBg.src) {
+                customBg.classList.add('active');
+                dynamicBg.style.opacity = '0';
+            }
+            
+            saveSettings();
+        }
+
+        function init() {
+            themeToggle.addEventListener('click', toggleTheme);
+            
+            settingsBtn.addEventListener('click', () => {
+                settingsPanel.classList.add('active');
+            });
+            
+            closeSettings.addEventListener('click', () => {
+                settingsPanel.classList.remove('active');
+            });
+            
+            searchBtn.addEventListener('click', performSearch);
+            
+            searchBox.addEventListener('input', () => {
+                showSuggestions(searchBox.value);
+            });
+            
+            searchBox.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+            
+            uploadBtn.addEventListener('click', () => {
+                bgUpload.click();
+            });
+            
+            bgUpload.addEventListener('change', handleBackgroundUpload);
+            
+            defaultBgToggle.addEventListener('change', toggleDefaultBackground);
+            
+            loadSettings();
+            
+            document.querySelector('.container').style.opacity = '1';
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

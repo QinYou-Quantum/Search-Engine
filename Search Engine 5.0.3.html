@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Engine 5.0.3</title>
+    <style>
+        :root {
+            --primary-bg: #f5f5f5;
+            --secondary-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --button-hover: #e0e0e0;
+            --settings-bg: #ffffff;
+            --recommend-bg: #ffffff;
+            --transition-speed: 0.3s;
+            --accent-color: #2196F3;
+        }
+
+        .dark-theme {
+            --primary-bg: #121212;
+            --secondary-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --border-color: #333333;
+            --shadow-color: rgba(255, 255, 255, 0.1);
+            --button-hover: #333333;
+            --settings-bg: #2d2d2d;
+            --recommend-bg: #2d2d2d;
+            --accent-color: #42a5f5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            opacity: 0.3;
+            transition: opacity 0.5s ease;
+        }
+
+        .custom-bg .background {
+            opacity: 0;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            font-weight: 300;
+            text-align: center;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            font-size: 1.1rem;
+            outline: none;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            transition: all var(--transition-speed);
+        }
+
+        .search-box:focus {
+            box-shadow: 0 4px 15px var(--shadow-color);
+            border-color: var(--accent-color);
+        }
+
+        .search-button {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            height: calc(100% - 10px);
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-speed);
+        }
+
+        .search-button:hover {
+            background-color: #0b7dda;
+        }
+
+        .quick-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .quick-link {
+            padding: 0.8rem 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all var(--transition-speed);
+            box-shadow: 0 2px 5px var(--shadow-color);
+        }
+
+        .quick-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow-color);
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            transition: all var(--transition-speed);
+            z-index: 100;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(30deg);
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .settings-button {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            transition: all var(--transition-speed);
+            z-index: 100;
+        }
+
+        .settings-button:hover {
+            transform: rotate(30deg);
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-speed);
+        }
+
+        .settings-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .settings-content {
+            background-color: var(--settings-bg);
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 20px var(--shadow-color);
+            transform: translateY(-20px);
+            transition: transform var(--transition-speed);
+        }
+
+        .settings-modal.active .settings-content {
+            transform: translateY(0);
+        }
+
+        .settings-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .setting-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .setting-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all var(--transition-speed);
+        }
+
+        .file-input-label:hover {
+            background-color: var(--button-hover);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border-color);
+            transition: var(--transition-speed);
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: var(--text-color);
+            transition: var(--transition-speed);
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--accent-color);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+            background-color: white;
+        }
+
+        .close-settings {
+            margin-top: 1rem;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            background-color: var(--accent-color);
+            color: white;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            width: 100%;
+        }
+
+        .close-settings:hover {
+            background-color: #0b7dda;
+        }
+
+        .recommendations {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 0.5rem;
+            background-color: var(--recommend-bg);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            overflow: hidden;
+            opacity: 0;
+            max-height: 0;
+            transition: all var(--transition-speed);
+            position: absolute;
+            z-index: 10;
+        }
+
+        .recommendations.active {
+            opacity: 1;
+            max-height: 500px;
+        }
+
+        .recommendation-item {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            color: var(--text-color);
+        }
+
+        .recommendation-item:hover {
+            background-color: var(--button-hover);
+        }
+
+        .recommendation-item:not(:last-child) {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .recommendation-item.selected {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .copyright {
+            margin-top: 3rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+
+        .custom-bg-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .custom-bg-image.active {
+            opacity: 1;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .search-hint {
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            color: var(--text-color);
+            opacity: 0.7;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+    <div class="custom-bg-image" id="customBgImage"></div>
+
+    <button class="theme-toggle" id="themeToggle">🌓</button>
+    <button class="settings-button" id="settingsButton">⚙️</button>
+
+    <div class="container">
+        <h1>Search Engine</h1>
+        
+        <div class="search-container">
+            <input type="text" class="search-box" id="searchBox" placeholder="Search with Bing or type to see suggestions..." autocomplete="off">
+            <button class="search-button" id="searchButton">🔍</button>
+            <div class="recommendations" id="recommendations"></div>
+        </div>
+
+        <p class="search-hint" id="searchHint">Start typing to see search suggestions</p>
+
+        <div class="quick-links">
+            <a href="https://www.baidu.com" class="quick-link" target="_blank">Baidu</a>
+            <a href="https://www.douyin.com" class="quick-link" target="_blank">Douyin</a>
+        </div>
+
+        <div class="copyright">&copy; 2026 Qin_Xiaoyou Lightweight Search Engine</div>
+    </div>
+
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <h2 class="settings-title">Settings</h2>
+            
+            <div class="setting-item">
+                <label class="setting-label">Custom Background</label>
+                <input type="file" id="bgImageInput" class="file-input" accept="image/*">
+                <label for="bgImageInput" class="file-input-label">Choose Image</label>
+                <div style="margin-top: 0.5rem; font-size: 0.8rem; opacity: 0.7;" id="bgImageName"></div>
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">Use Default Background</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="defaultBgToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">Search Suggestions</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="suggestionsToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <button class="close-settings" id="closeSettings">Close</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const settingsButton = document.getElementById('settingsButton');
+            const settingsModal = document.getElementById('settingsModal');
+            const closeSettings = document.getElementById('closeSettings');
+            const searchBox = document.getElementById('searchBox');
+            const searchButton = document.getElementById('searchButton');
+            const recommendations = document.getElementById('recommendations');
+            const bgImageInput = document.getElementById('bgImageInput');
+            const bgImageName = document.getElementById('bgImageName');
+            const defaultBgToggle = document.getElementById('defaultBgToggle');
+            const suggestionsToggle = document.getElementById('suggestionsToggle');
+            const customBgImage = document.getElementById('customBgImage');
+            const body = document.body;
+            const searchHint = document.getElementById('searchHint');
+            let currentTheme = localStorage.getItem('theme') || 'light';
+            let customBgUrl = localStorage.getItem('customBgUrl');
+            let useDefaultBg = localStorage.getItem('useDefaultBg') === 'true';
+            let suggestionsEnabled = localStorage.getItem('suggestionsEnabled') !== 'false';
+            if (currentTheme === 'dark') {
+                body.classList.add('dark-theme');
+                themeToggle.textContent = '🌞';
+            }
+            if (customBgUrl) {
+                customBgImage.style.backgroundImage = `url(${customBgUrl})`;
+                if (!useDefaultBg) {
+                    body.classList.add('custom-bg');
+                    customBgImage.classList.add('active');
+                    defaultBgToggle.checked = false;
+                }
+            } else {
+                defaultBgToggle.checked = true;
+                defaultBgToggle.disabled = true;
+            }
+
+            suggestionsToggle.checked = suggestionsEnabled;
+            if (!suggestionsEnabled) {
+                searchHint.textContent = "Search suggestions are disabled. Enable them in settings.";
+            }
+
+            themeToggle.addEventListener('click', function() {
+                body.classList.toggle('dark-theme');
+                const isDark = body.classList.contains('dark-theme');
+                themeToggle.textContent = isDark ? '🌞' : '🌙';
+                currentTheme = isDark ? 'dark' : 'light';
+                localStorage.setItem('theme', currentTheme);
+            });
+
+            settingsButton.addEventListener('click', function() {
+                settingsModal.classList.add('active');
+            });
+
+            closeSettings.addEventListener('click', function() {
+                settingsModal.classList.remove('active');
+            });
+
+            bgImageInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        customBgUrl = event.target.result;
+                        localStorage.setItem('customBgUrl', customBgUrl);
+                        customBgImage.style.backgroundImage = `url(${customBgUrl})`;
+                        
+                        if (!defaultBgToggle.checked) {
+                            body.classList.add('custom-bg');
+                            setTimeout(() => {
+                                customBgImage.classList.add('active');
+                            }, 100);
+                        }
+                        
+                        bgImageName.textContent = e.target.files[0].name;
+                        defaultBgToggle.disabled = false;
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            defaultBgToggle.addEventListener('change', function() {
+                useDefaultBg = this.checked;
+                localStorage.setItem('useDefaultBg', useDefaultBg);
+                
+                if (useDefaultBg) {
+                    body.classList.remove('custom-bg');
+                    customBgImage.classList.remove('active');
+                } else if (customBgUrl) {
+                    body.classList.add('custom-bg');
+                    setTimeout(() => {
+                        customBgImage.classList.add('active');
+                    }, 100);
+                }
+            });
+
+            suggestionsToggle.addEventListener('change', function() {
+                suggestionsEnabled = this.checked;
+                localStorage.setItem('suggestionsEnabled', suggestionsEnabled);
+                if (!suggestionsEnabled) {
+                    recommendations.classList.remove('active');
+                    searchHint.textContent = "Search suggestions are disabled. Enable them in settings.";
+                } else {
+                    searchHint.textContent = "Start typing to see search suggestions";
+                }
+            });
+
+            function performSearch() {
+                const query = searchBox.value.trim();
+                if (query) {
+                    window.open(`https://www.bing.com/search?q=${encodeURIComponent(query)}`, '_self');
+                }
+            }
+
+            searchButton.addEventListener('click', performSearch);
+
+            searchBox.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+
+            let lastQuery = '';
+            let debounceTimer;
+            let currentSelection = -1;
+
+            searchBox.addEventListener('input', function() {
+                const query = this.value.trim();
+                lastQuery = query;
+                
+                clearTimeout(debounceTimer);
+                
+                if (!query || !suggestionsEnabled) {
+                    recommendations.classList.remove('active');
+                    currentSelection = -1;
+                    return;
+                }
+                
+                debounceTimer = setTimeout(() => {
+                    fetchSearchSuggestions(query);
+                }, 200);
+            });
+
+            searchBox.addEventListener('keydown', function(e) {
+                if (!recommendations.classList.contains('active') || !suggestionsEnabled) return;
+                
+                const items = recommendations.querySelectorAll('.recommendation-item');
+                if (items.length === 0) return;
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    currentSelection = (currentSelection + 1) % items.length;
+                    updateSelection(items);
+                }
+                else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    currentSelection = (currentSelection - 1 + items.length) % items.length;
+                    updateSelection(items);
+                }
+                else if (e.key === 'Enter' && currentSelection >= 0) {
+                    e.preventDefault();
+                    searchBox.value = items[currentSelection].textContent;
+                    performSearch();
+                }
+                else if (e.key === 'Escape') {
+                    recommendations.classList.remove('active');
+                    currentSelection = -1;
+                }
+            });
+
+            function updateSelection(items) {
+                items.forEach((item, index) => {
+                    item.classList.toggle('selected', index === currentSelection);
+                });
+            }
+
+            async function fetchSearchSuggestions(query) {
+                try {
+                    const response = await fetch(`https://api.bing.com/osjson.aspx?query=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    
+                    if (data[0] === query && data[1] && data[1].length > 0) {
+                        displaySuggestions(data[1]);
+                    } else {
+                        recommendations.classList.remove('active');
+                    }
+                } catch (error) {
+                    console.error('Error fetching suggestions:', error);
+                    fallbackSuggestions(query);
+                }
+            }
+
+            function fallbackSuggestions(query) {
+                const fallbackTerms = [
+                    `${query} definition`,
+                    `${query} news`,
+                    `${query} near me`,
+                    `${query} 2026`,
+                    `${query} wiki`
+                ];
+                displaySuggestions(fallbackTerms.slice(0, 5));
+            }
+
+            function displaySuggestions(suggestions) {
+                if (searchBox.value.trim() !== lastQuery) return;
+                
+                if (!suggestions || suggestions.length === 0) {
+                    recommendations.classList.remove('active');
+                    return;
+                }
+                
+                recommendations.innerHTML = '';
+                currentSelection = -1;
+                
+                suggestions.forEach(suggestion => {
+                    const item = document.createElement('div');
+                    item.className = 'recommendation-item';
+                    item.textContent = suggestion;
+                    
+                    item.addEventListener('click', function() {
+                        searchBox.value = suggestion;
+                        performSearch();
+                    });
+                    
+                    item.addEventListener('mouseover', function() {
+                        const items = recommendations.querySelectorAll('.recommendation-item');
+                        const index = Array.from(items).indexOf(this);
+                        currentSelection = index;
+                        updateSelection(items);
+                    });
+                    
+                    recommendations.appendChild(item);
+                });
+                
+                recommendations.classList.add('active');
+            }
+
+            document.addEventListener('click', function(e) {
+                if (e.target === settingsModal) {
+                    settingsModal.classList.remove('active');
+                }
+                
+                if (!searchBox.contains(e.target) && e.target !== recommendations) {
+                    recommendations.classList.remove('active');
+                    currentSelection = -1;
+                }
+            });
+
+            searchBox.focus();
+        });
+    </script>
+</body>
+</html>

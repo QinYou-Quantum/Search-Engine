@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberSearch | Geek Edition</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00f7ff;
+            --secondary: #ff00f7;
+            --accent: #00ff88;
+            --bg-dark: #0a0a1a;
+            --bg-light: #1a1a3a;
+            --glass: rgba(16, 16, 48, 0.8);
+            --scanline: rgba(0, 255, 255, 0.05);
+            --glow: 0 0 15px rgba(0, 247, 255, 0.5);
+            --transition: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a0a3a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+            color: var(--primary);
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(45deg, rgba(0,255,255,0.1) 0%, transparent 70%),
+                repeating-linear-gradient(0deg, transparent 0%, var(--scanline) 1px, transparent 2px);
+            background-size: 200% 200%, 100% 4px;
+            animation: scanline 8s linear infinite, dataFlow 120s linear infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .light-effect {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,255,255,0.3) 0%, transparent 70%);
+            filter: blur(30px);
+            animation: pulse 4s infinite alternate;
+            opacity: 0.7;
+        }
+
+        .light-1 { top: 20%; left: 10%; }
+        .light-2 { bottom: 30%; right: 15%; animation-delay: -2s; }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            position: relative;
+            z-index: 1;
+            perspective: 1000px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 60px;
+            transform-style: preserve-3d;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            position: relative;
+            display: inline-block;
+            transform: translateZ(20px);
+        }
+
+        .logo::before {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: var(--bg-dark);
+            text-shadow: none;
+            animation: matrix 8s linear infinite;
+            opacity: 0.1;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 50px;
+            transform-style: preserve-3d;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 22px 70px 22px 30px;
+            background: var(--glass);
+            border: 2px solid rgba(0,255,255,0.2);
+            border-radius: 50px;
+            color: var(--primary);
+            font-size: 1.2rem;
+            box-shadow: 0 0 20px rgba(0,255,255,0.2);
+            backdrop-filter: blur(10px);
+            transform: translateZ(10px);
+            transition: all 0.3s var(--transition);
+            outline: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent);
+            transform: translateZ(20px) scale(1.02);
+        }
+
+        .search-input::placeholder {
+            color: rgba(0,255,255,0.5);
+        }
+
+        .search-input::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(0,255,255,0.1) 50%,
+                transparent 100%
+            );
+            animation: dataStream 3s linear infinite;
+        }
+
+        .search-input:focus::after {
+            animation: dataStream 1.5s linear infinite;
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transform: translateZ(15px);
+            transition: all 0.3s var(--transition);
+            box-shadow: 0 0 15px var(--secondary);
+            overflow: hidden;
+        }
+
+        .search-btn:hover {
+            transform: translateZ(25px) scale(1.1);
+            box-shadow: 0 0 25px var(--accent);
+        }
+
+        .search-btn:active {
+            transform: translateZ(10px) scale(0.95);
+        }
+
+        .search-btn i {
+            font-size: 1.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .search-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255,255,255,0.3) 50%,
+                transparent 100%
+            );
+            animation: btnShine 3s linear infinite;
+            z-index: 1;
+        }
+
+        .search-btn:hover::before {
+            animation: btnShine 1.5s linear infinite;
+        }
+
+        .settings-panel {
+            background: var(--glass);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0,255,255,0.2);
+            backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
+            transform: translateZ(5px);
+            margin-bottom: 40px;
+            border: 1px solid rgba(0,255,255,0.1);
+        }
+
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0,255,255,0.2);
+            transform: translateZ(10px);
+        }
+
+        .settings-header h2 {
+            font-size: 1.4rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-header h2::before {
+            content: '>';
+            color: var(--accent);
+        }
+
+        .settings-toggle {
+            background: none;
+            border: none;
+            color: var(--secondary);
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.3s var(--transition);
+            transform: rotate(0deg) translateZ(10px);
+        }
+
+        .settings-toggle:hover {
+            color: var(--accent);
+            transform: rotate(90deg) translateZ(15px);
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px dashed rgba(0,255,255,0.1);
+            transform: translateZ(5px);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--primary);
+        }
+
+        .setting-label i {
+            color: var(--accent);
+            width: 20px;
+            text-align: center;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-light);
+            transition: all 0.3s var(--transition);
+            border-radius: 30px;
+            border: 1px solid rgba(0,255,255,0.2);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 24px;
+            width: 24px;
+            left: 3px;
+            bottom: 3px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            transition: all 0.3s var(--transition);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--secondary);
+        }
+
+        input:checked + .slider {
+            background: rgba(0,255,255,0.1);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+            background: linear-gradient(45deg, var(--accent), var(--primary));
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: rgba(0,255,255,0.5);
+            font-size: 0.9rem;
+            transform: translateZ(5px);
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s var(--transition);
+            display: inline-block;
+            position: relative;
+        }
+
+        .footer a:hover {
+            color: var(--primary);
+        }
+
+        .footer a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent);
+            animation: underline 0.5s var(--transition) forwards;
+        }
+
+        .copyright {
+            margin-top: 15px;
+            color: rgba(0,255,255,0.3);
+            font-size: 0.8rem;
+            transform: translateZ(5px);
+        }
+
+        .terminal {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            color: var(--primary);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s var(--transition);
+            z-index: 10000;
+            border: 1px solid rgba(0,255,255,0.2);
+        }
+
+        .terminal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .terminal-line {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .terminal-prompt {
+            color: var(--accent);
+        }
+
+        @keyframes scanline {
+            0% { background-position: 0 0, 0 0; }
+            100% { background-position: 200% 200%, 0 4px; }
+        }
+
+        @keyframes dataFlow {
+            0% { background-position: 0 0; }
+            100% { background-position: 2000px 2000px; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            100% { transform: scale(1.05); opacity: 0.9; }
+        }
+
+        @keyframes matrix {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+
+        @keyframes dataStream {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        @keyframes btnShine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        @keyframes underline {
+            to { width: 100%; }
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2.2rem;
+            }
+            
+            .search-input {
+                padding: 18px 60px 18px 25px;
+                font-size: 1.1rem;
+            }
+            
+            .search-btn {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .settings-panel {
+                padding: 25px;
+            }
+            
+            .light-1, .light-2 {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.8rem;
+            }
+            
+            .search-input {
+                padding: 15px 50px 15px 20px;
+                font-size: 1rem;
+            }
+            
+            .search-btn {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .settings-panel {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>System initialized...</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>Loading cyberpunk interface...</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>Qin_Xiaoyou CyberSearch v1.0β ready</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>开始部署Cyber Search Engine有效命令集10%</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>开始部署Cyber Search Engine有效命令集20%</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>开始部署Cyber Search Engine有效命令集30%</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>开始部署Cyber Search Engine有效命令集40%</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>开始部署Cyber Search Engine有效命令集50%</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>开始部署Cyber Search Engine有效命令集60%</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>开始部署Cyber Search Engine有效命令集70%</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>开始部署Cyber Search Engine有效命令集80%</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>开始部署Cyber Search Engine有效命令集90%</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>开始部署Cyber Search Engine有效命令集100%</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>完成部署Cyber Search Engine100%</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>Cyber Search Engine:"Welcome Back Uesr!"</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>正在开启实时日志输出loading...</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>日志加载完成!</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>开始清除日志缓存...</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>50%</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>100%</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>日志缓存清理完成!</span>
+        </div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">root@CyberSearch:~$</span>
+            <span>刷新...
+                ERROR
+                (!无法连接至云端!)</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo" data-text="CyberSearch">CyberSearch</div>
+        </div>
+        
+        <form class="search-box" action="https://www.bing.com/search" method="get" target="_blank">
+            <input type="text" class="search-input" name="q" placeholder="> _Enter search query..." autocomplete="off" required>
+            <button type="submit" class="search-btn">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+        
+        <div class="settings-panel">
+            <div class="settings-header">
+                <h2><i class="fas fa-terminal"></i>System Config</h2>
+                <button class="settings-toggle" id="settingsToggle">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <i class="fas fa-shield-virus"></i>
+                    <span>AI Filter</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="aifilter" value="on" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <i class="fas fa-code-branch"></i>
+                    <span>Dev Mode</span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="devmode" value="on">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <div class="setting-label">
+                    <i class="fas fa-globe-asia"></i>
+                    <span>Region</span>
+                </div>
+                <select name="cc" class="region-select" style="background: var(--bg-light); color: var(--primary); border: none; border-radius: 12px; padding: 6px 12px;">
+                    <option value="US">🇺🇸 US (Silicon Valley)</option>
+                    <option value="JP">error</option>
+                    <option value="DE">error</option>
+                    <option value="IN">error</option>
+                    <option value="CN">error</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Powered by <a href="https://www.bing.com" target="_blank">QuantumSearch Engine</a> | 
+            <a href="#" id="settingsLink">System Settings</a> | 
+            <a href="#" id="terminalToggle">Terminal</a></p>
+        </div>
+        
+        <div class="copyright">&copy; 2026 Qin_Xiaoyou CyberSearch - Cyberpunk Edition β</div>
+    </div>
+
+    <div class="light-effect light-1"></div>
+    <div class="light-effect light-2"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const terminal = document.querySelector('.terminal');
+            const terminalToggle = document.getElementById('terminalToggle');
+            
+            terminalToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                terminal.classList.toggle('active');
+                
+                if (terminal.classList.contains('active')) {
+                    gsap.fromTo(terminal, 
+                        { opacity: 0, y: 20 },
+                        { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }
+                    );
+                }
+            });
+            
+            const settingsToggle = document.getElementById('settingsToggle');
+            const settingsPanel = document.querySelector('.settings-panel');
+            const settingsLink = document.getElementById('settingsLink');
+            let isPanelOpen = false;
+            
+            function toggleSettings(e) {
+                if (e) e.preventDefault();
+                
+                isPanelOpen = !isPanelOpen;
+                
+                if (isPanelOpen) {
+                    gsap.fromTo(settingsPanel, 
+                        { height: 'auto', opacity: 0, padding: '0 30px' },
+                        { 
+                            height: 'auto', 
+                            opacity: 1, 
+                            padding: '30px', 
+                            duration: 0.5, 
+                            ease: 'power2.out' 
+                        }
+                    );
+                } else {
+                    gsap.to(settingsPanel, 
+                        { 
+                            height: 0, 
+                            opacity: 0, 
+                            padding: '0 30px', 
+                            duration: 0.5, 
+                            ease: 'power2.in' 
+                        }
+                    );
+                }
+                
+                gsap.to(settingsToggle, 
+                    { 
+                        rotate: isPanelOpen ? 90 : 0, 
+                        duration: 0.5, 
+                        ease: 'back.out(1.7)' 
+                    }
+                );
+            }
+            
+            settingsToggle.addEventListener('click', toggleSettings);
+            settingsLink.addEventListener('click', toggleSettings);
+            
+            const searchInput = document.querySelector('.search-input');
+            searchInput.addEventListener('focus', () => {
+                gsap.to(searchInput, {
+                    scale: 1.02,
+                    boxShadow: '0 0 30px var(--accent)',
+                    duration: 0.3,
+                    ease: 'power2.out'
+                });
+            });
+            
+            searchInput.addEventListener('blur', () => {
+                gsap.to(searchInput, {
+                    scale: 1,
+                    boxShadow: '0 0 20px rgba(0,255,255,0.2)',
+                    duration: 0.3,
+                    ease: 'power2.out'
+                });
+            });
+            
+            const toggleSwitches = document.querySelectorAll('.toggle-switch input');
+            toggleSwitches.forEach(toggle => {
+                toggle.addEventListener('change', function() {
+                    const slider = this.parentElement.querySelector('.slider');
+                    
+                    gsap.to(slider, {
+                        scale: 0.9,
+                        duration: 0.1,
+                        ease: 'power2.out'
+                    });
+                    
+                    setTimeout(() => {
+                        gsap.to(slider, {
+                            scale: 1,
+                            duration: 0.3,
+                            ease: 'elastic.out(1, 0.5)'
+                        });
+                    }, 100);
+                });
+            });
+            
+            if (!window.gsap) {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js';
+                script.onload = initAnimations;
+                document.head.appendChild(script);
+            } else {
+                initAnimations();
+            }
+            
+            function initAnimations() {
+                gsap.from('.logo', {
+                    opacity: 0,
+                    y: -50,
+                    duration: 0.8,
+                    delay: 0.2,
+                    ease: 'power2.out'
+                });
+                
+                gsap.from('.search-box', {
+                    opacity: 0,
+                    y: 50,
+                    duration: 0.8,
+                    delay: 0.5,
+                    ease: 'power2.out'
+                });
+                
+                gsap.from('.settings-panel', {
+                    opacity: 0,
+                    y: 30,
+                    duration: 0.8,
+                    delay: 0.8,
+                    ease: 'power2.out'
+                });
+                
+                gsap.from('.footer', {
+                    opacity: 0,
+                    y: 20,
+                    duration: 0.8,
+                    delay: 1.1,
+                    ease: 'power2.out'
+                });
+                
+                gsap.from('.light-effect', {
+                    opacity: 0,
+                    scale: 0.5,
+                    duration: 1,
+                    delay: 1.3,
+                    ease: 'elastic.out(1, 0.7)',
+                    stagger: 0.2
+                });
+            }
+        });
+    </script>
+</body>
+</html>
