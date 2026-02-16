@@ -2,6 +2,9 @@
 Lightweight Search Engine
 A lightweight, learning-oriented search engine prototype for educational purposes.
 
+# Search-Engine
+A lightweight, learning-oriented search engine prototype for educational purposes.
+
 ## 🌐 Multilingual Version / Многоязычная версия / Versión multilingüe / Version multilingue / 多言語バージョン / 多语言版本
 - [English](#english)
 - [Русский](#русский)
@@ -34,7 +37,7 @@ Search-Engine is a personal learning project focused on building a simplified se
 
 ### Quick Start
 #### Prerequisites
-```bash
+bash
 pip install -r requirements.txt
 Run the Search Engine
 bash
@@ -81,7 +84,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-Русский
+### Русский
 Обзор проекта
 Search-Engine — это личный учебный проект, направленный на создание упрощенного прототипа поисковой системы. Проект охватывает основные концепции поисковых систем, включая веб-краулинг, индексацию данных, поиск по ключевым словам и базовые алгоритмы ранжирования результатов.
 Функции
