@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Furry Search Engine 2.0</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #165DFF;
+            --bg: #ffffff;
+            --surface: #ffffff;
+            --text: #1D2129;
+            --text-secondary: #4E5969;
+            --border: #E5E6EB;
+            --shadow: 0 1px 6px rgba(169,172,175,0.28);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg-opacity: 1;
+            --default-bg-color: #F5F7FA;
+            --logo-main: #165DFF;
+            --logo-sub: #1D2129;
+        }
+        .dark-theme {
+            --primary: #4080FF;
+            --bg: #141414;
+            --surface: #1F1F1F;
+            --text: #F7F8FA;
+            --text-secondary: #86909C;
+            --border: #303030;
+            --shadow: 0 1px 6px rgba(0,0,0,0.5);
+            --bg-opacity: 0.5;
+            --default-bg-color: #0F172A;
+            --logo-main: #4080FF;
+            --logo-sub: #F7F8FA;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            font-weight: 400;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: var(--transition);
+            line-height: 1.5;
+        }
+        .bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .dynamic-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--default-bg-color);
+            opacity: var(--bg-opacity);
+            transition: opacity 1s ease;
+            z-index: -2;
+        }
+        .custom-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease;
+            z-index: -1;
+        }
+        .custom-video-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease;
+            z-index: -1;
+        }
+        .custom-bg.active, .custom-video-bg.active {
+            opacity: var(--bg-opacity);
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: var(--transition);
+            opacity: 0;
+        }
+        .logo {
+            font-size: 3.5rem;
+            font-weight: 400;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out;
+            letter-spacing: -0.02em;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+        }
+        .logo .furry {
+            color: var(--logo-main);
+            font-weight: 500;
+        }
+        .logo .search-engine {
+            color: var(--logo-sub);
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .search-group {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease-out 0.2s forwards;
+            opacity: 0;
+            z-index: 200;
+        }
+        .search-box {
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 400;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            outline: none;
+        }
+        .search-box:focus {
+            box-shadow: 0 1px 12px rgba(22,93,255,0.25);
+            border-color: var(--primary);
+        }
+        .search-btn {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .search-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22,93,255,0.3);
+        }
+        .suggestions-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 20px auto;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        margin-bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+                        opacity 0.3s ease;
+            opacity: 0;
+            z-index: 150;
+        }
+        .suggestions-container.active {
+            max-height: 300px;
+            margin-bottom: 20px;
+            opacity: 1;
+        }
+        .suggestions {
+            width: 100%;
+            background: var(--surface);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 8px 0;
+            transform-origin: top center;
+            transform: scaleY(0.95);
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                        box-shadow 0.3s ease;
+        }
+        .suggestions-container.active .suggestions {
+            transform: scaleY(1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .suggestion-item {
+            padding: 12px 24px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            transform: translateX(-10px);
+            opacity: 0;
+            animation: slideIn 0.3s ease forwards;
+        }
+        .suggestion-item:nth-child(1) { animation-delay: 0.05s; }
+        .suggestion-item:nth-child(2) { animation-delay: 0.1s; }
+        .suggestion-item:nth-child(3) { animation-delay: 0.15s; }
+        .suggestion-item:nth-child(4) { animation-delay: 0.2s; }
+        .suggestion-item:nth-child(5) { animation-delay: 0.25s; }
+        .suggestion-item:nth-child(6) { animation-delay: 0.3s; }
+        .suggestion-item:nth-child(7) { animation-delay: 0.35s; }
+        .suggestion-item:nth-child(8) { animation-delay: 0.4s; }
+        .suggestion-item:nth-child(9) { animation-delay: 0.45s; }
+        .suggestion-item:nth-child(10) { animation-delay: 0.5s; }
+        @keyframes slideIn {
+            from { transform: translateX(-10px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .suggestion-item:hover {
+            background: rgba(22,93,255,0.05);
+            border-radius: 12px;
+            margin: 0 8px;
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(22,93,255,0.1);
+        }
+        .dark-theme .suggestion-item:hover {
+            background: rgba(64,128,255,0.08);
+            box-shadow: 0 2px 8px rgba(64,128,255,0.1);
+        }
+        .suggestions::-webkit-scrollbar { width: 6px; }
+        .suggestions::-webkit-scrollbar-track { background: transparent; border-radius: 10px; }
+        .suggestions::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; transition: background 0.2s ease; }
+        .suggestions::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+        .quick-links {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out 0.4s forwards;
+            opacity: 0;
+            position: relative;
+            z-index: 100;
+            background: var(--surface);
+            padding: 10px;
+            border-radius: 8px;
+            transition: var(--transition);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .quick-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 400;
+            transition: var(--transition);
+        }
+        .quick-link:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 400;
+            animation: fadeInUp 0.8s ease-out 0.6s forwards;
+            opacity: 0;
+        }
+        .action-btn {
+            position: fixed;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 400;
+            transition: var(--transition);
+            z-index: 1000;
+            pointer-events: auto;
+        }
+        .action-btn:hover { transform: scale(1.1); box-shadow: var(--shadow); }
+        .theme-toggle { top: 20px; left: 20px; }
+        .settings-btn { top: 20px; right: 20px; }
+        .docs-btn { top: 80px; right: 20px; }
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100%;
+            background: var(--surface);
+            box-shadow: -2px 0 20px rgba(0,0,0,0.2);
+            z-index: 1001;
+            padding: 30px;
+            transition: right 0.5s cubic-bezier(0.34,1.56,0.64,1);
+            overflow-y: auto;
+        }
+        .settings-panel.active { right: 0; }
+        .docs-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100%;
+            background: var(--surface);
+            box-shadow: -2px 0 20px rgba(0,0,0,0.2);
+            z-index: 1001;
+            padding: 30px;
+            transition: right 0.5s cubic-bezier(0.34,1.56,0.64,1);
+            overflow-y: auto;
+        }
+        .docs-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+        .docs-panel::-webkit-scrollbar-track {
+            background: var(--surface);
+            border-radius: 10px;
+        }
+        .docs-panel::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+            transition: background 0.2s ease;
+        }
+        .docs-panel::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+        .dark-theme .docs-panel::-webkit-scrollbar-thumb {
+            background: #444;
+        }
+        .dark-theme .docs-panel::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+        .docs-panel.active { right: 0; }
+        .docs-content {
+            white-space: pre-line;
+            padding: 10px 0;
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text);
+        }
+        .docs-content p {
+            margin-bottom: 16px;
+        }
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        .settings-title { font-size: 24px; font-weight: 500; }
+        .close-settings {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .close-settings:hover { transform: scale(1.2); }
+        .setting-item {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .setting-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toggle-switch { position: relative; display: inline-block; width: 52px; height: 26px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .toggle-slider:before {
+            position: absolute; content: "";
+            height: 18px; width: 18px; left: 4px; bottom: 4px;
+            background: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .toggle-slider { background: var(--primary); }
+        input:checked + .toggle-slider:before { transform: translateX(26px); }
+        .upload-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
+            border: none;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+        .upload-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22,93,255,0.3);
+        }
+        .save-video-btn {
+            background: #52c41a !important;
+        }
+        .save-video-btn:hover {
+            box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3) !important;
+        }
+        .clear-cache-btn {
+            background: #86909C;
+            margin-top: 10px;
+        }
+        .clear-cache-btn:hover {
+            background: #ff4d4f;
+            box-shadow: 0 4px 12px rgba(255,77,79,0.3);
+        }
+        #bgUpload, #videoUpload { display: none; }
+        .bg-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .bg-type-btn {
+            padding: 8px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+            font-weight: 400;
+        }
+        .bg-type-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .tip-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        .error-tip {
+            color: #ff4d4f;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        .success-tip {
+            color: #52c41a;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        /* 新增语言选择样式 */
+        .language-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .language-btn {
+            padding: 8px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+            font-weight: 400;
+        }
+        .language-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        @media (max-width: 768px) {
+            .logo { font-size: 2.5rem; flex-direction: column; text-align: center; gap: 4px; }
+            .settings-panel, .docs-panel { width: 100%; right: -100%; }
+            .quick-links { flex-direction: column; align-items: center; }
+            .bg-type-selector { flex-direction: column; }
+            .language-selector { flex-direction: column; }
+            .upload-btn { margin-right: 0; margin-bottom: 10px; width: 100%; }
+            .clear-cache-btn { width: 100%; margin-right: 0; }
+            .suggestions-container { width: 90%; }
+            .action-btn { width: 44px; height: 44px; font-size: 18px; }
+            .docs-btn { top: 70px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-container">
+        <div class="dynamic-bg" id="dynamicBg"></div>
+        <img class="custom-bg" id="customBg" alt="Custom Background">
+        <video class="custom-video-bg" id="customVideoBg" autoplay loop muted playsinline></video>
+    </div>
+    <button class="action-btn theme-toggle" id="themeToggle">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+    <button class="action-btn settings-btn" id="settingsBtn">
+        <i class="fas fa-cog"></i>
+    </button>
+    <button class="action-btn docs-btn" id="docsBtn">
+        <i class="fas fa-book"></i>
+    </button>
+    <div class="container" id="mainContainer">
+        <h1 class="logo">
+            <span class="furry">Furry</span>
+            <span class="search-engine">Search Engine</span>
+        </h1>
+        <div class="search-group" id="searchGroup">
+            <input type="text" class="search-box" id="searchBox" placeholder="Search the web..." autocomplete="off">
+            <button class="search-btn" id="searchBtn">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </div>
+        <div class="suggestions-container" id="suggestionsContainer">
+            <div class="suggestions" id="suggestionsBox"></div>
+        </div>
+        <div class="quick-links">
+            <a href="https://github.com" target="_blank" class="quick-link"><i class="fab fa-github"></i> Github</a>
+            <a href="https://tiktok.com" target="_blank" class="quick-link"><i class="fab fa-tiktok"></i> Tiktok</a>
+            <a href="https://youtube.com" target="_blank" class="quick-link"><i class="fab fa-youtube"></i>Youtube</a>
+            <a href="https://facebook.com" target="_blank" class="quick-link"><i class="fab fa-facebook"></i>Facebook</a>
+            <a href="https://www.sotwe.com" target="_blank" class="quick-link"><i class="fab fa-twitter"></i>Twitter</a>
+            <a href="https://bilibili.com" target="_blank" class="quick-link"><i class="fab fa-bilibili"></i>Bilibili</a>
+            <a href="https://microsoft.com" target="_blank" class="quick-link"><i class="fab fa-microsoft"></i>Microsoft</a>
+            <a href="https://cwo.cc/musicc" target="_blank" class="quick-link"><i class="fas fa-music"></i>Music</a>
+            <a href="https://minecraft.com" target="_blank" class="quick-link"><i class="fas fa-gamepad"></i>Minecraft</a>
+            <a href="https://www.curseforge.com/minecraft" target="_blank" class="quick-link"><i class="fas fa-book"></i>Curseforge</a>
+            <a href="https://pc.woozooo.com/mydisk.php" target="_blank" class="quick-link"><i class="fas fa-cloud"></i>Lanzouyun</a>
+            <a href="https://hi-furry.cn" target="_blank" class="quick-link"><i class="fas fa-paw"></i>Hi-Furry</a>
+            <a href="https://liquidbounce.net/" target="_blank" class="quick-link"><i class="fas fa-droplet"></i>LiquidBounce</a>
+        </div>
+        <div class="footer">
+            &copy; 2026 Qin_Xiaoyou Lightweight Search Engine
+        </div>
+    </div>
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h2 class="settings-title"><i class="fas fa-sliders-h"></i> Settings</h2>
+            <button class="close-settings" id="closeSettings"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-image"></i> Custom Background</div>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;" id="bgDesc">
+                Upload a custom image or video to replace the default background.
+            </p>
+            <div class="bg-type-selector">
+                <button class="bg-type-btn active" id="imgBgBtn">Image Background</button>
+                <button class="bg-type-btn" id="videoBgBtn">Video Background</button>
+            </div>
+            <input type="file" id="bgUpload" accept="image/*">
+            <input type="file" id="videoUpload" accept="video/mp4,video/webm,video/ogg">
+            <button class="upload-btn" id="uploadImgBtn">Upload Image</button>
+            <button class="upload-btn" id="uploadVideoBtn" style="display: none;">Select Video</button>
+            <button class="upload-btn save-video-btn" id="saveVideoBtn" style="display: none;">💾 Save Video Background</button>
+            <button class="upload-btn clear-cache-btn" id="clearCacheBtn">Clear Background Cache</button>
+            <div class="tip-text" id="bgTip">Tips: Video files are stored locally as original binary (support 4K resolution).</div>
+            <div id="storageErrorTip" class="error-tip" style="display: none;"></div>
+            <div id="storageSuccessTip" class="success-tip" style="display: none;"></div>
+            <div style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 14px;" id="defaultBgText">Use default background</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="defaultBgToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-language"></i> Language / 语言</div>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;" id="languageDesc">
+                Select interface language / 选择界面显示语言
+            </p>
+            <div class="language-selector">
+                <button class="language-btn active" data-lang="en" id="enLangBtn">English</button>
+                <button class="language-btn" data-lang="zh" id="zhLangBtn">中文</button>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-lightbulb"></i> Search Suggestions</div>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;" id="suggestionDesc">
+                Show relevant search suggestions as you type.
+            </p>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 14px;" id="enableSuggestionText">Enable suggestions</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="suggestionsToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="settings-panel docs-panel" id="docsPanel">
+        <div class="settings-header">
+            <h2 class="settings-title"><i class="fas fa-book"></i> MIT License</h2>
+            <button class="close-settings" id="closeDocs"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="docs-content" id="docsContent">
+            <p>MIT License</p>
+            <p>Copyright © 2026 Qin_Xiaoyou</p>
+            <p>Logo:Furry Search Engine®</p>
+            <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+            <p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+            <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+            <p>https://github.com/qinyou-quantum</p>
+        </div>
+    </div>
+    <script>
+        const el = {
+            themeToggle: document.getElementById('themeToggle'),
+            themeIcon: document.getElementById('themeIcon'),
+            settingsBtn: document.getElementById('settingsBtn'),
+            settingsPanel: document.getElementById('settingsPanel'),
+            closeSettings: document.getElementById('closeSettings'),
+            docsBtn: document.getElementById('docsBtn'),
+            docsPanel: document.getElementById('docsPanel'),
+            closeDocs: document.getElementById('closeDocs'),
+            searchBox: document.getElementById('searchBox'),
+            searchBtn: document.getElementById('searchBtn'),
+            suggestionsBox: document.getElementById('suggestionsBox'),
+            suggestionsContainer: document.getElementById('suggestionsContainer'),
+            dynamicBg: document.getElementById('dynamicBg'),
+            customBg: document.getElementById('customBg'),
+            customVideoBg: document.getElementById('customVideoBg'),
+            bgUpload: document.getElementById('bgUpload'),
+            videoUpload: document.getElementById('videoUpload'),
+            uploadImgBtn: document.getElementById('uploadImgBtn'),
+            uploadVideoBtn: document.getElementById('uploadVideoBtn'),
+            saveVideoBtn: document.getElementById('saveVideoBtn'),
+            clearCacheBtn: document.getElementById('clearCacheBtn'),
+            defaultBgToggle: document.getElementById('defaultBgToggle'),
+            suggestionsToggle: document.getElementById('suggestionsToggle'),
+            imgBgBtn: document.getElementById('imgBgBtn'),
+            videoBgBtn: document.getElementById('videoBgBtn'),
+            storageErrorTip: document.getElementById('storageErrorTip'),
+            storageSuccessTip: document.getElementById('storageSuccessTip'),
+            mainContainer: document.getElementById('mainContainer'),
+            searchGroup: document.getElementById('searchGroup'),
+            enLangBtn: document.getElementById('enLangBtn'),
+            zhLangBtn: document.getElementById('zhLangBtn'),
+            languageDesc: document.getElementById('languageDesc'),
+            bgDesc: document.getElementById('bgDesc'),
+            bgTip: document.getElementById('bgTip'),
+            defaultBgText: document.getElementById('defaultBgText'),
+            suggestionDesc: document.getElementById('suggestionDesc'),
+            enableSuggestionText: document.getElementById('enableSuggestionText'),
+            docsContent: document.getElementById('docsContent'),
+            logoFurry: document.querySelector('.logo .furry'),
+            logoSearchEngine: document.querySelector('.logo .search-engine'),
+            footer: document.querySelector('.footer')
+        };
+        const langMap = {
+            en: {
+                logo: {
+                    furry: 'Furry',
+                    searchEngine: 'Search Engine'
+                },
+                searchBox: 'Search the web...',
+                searchBtn: 'Search',
+                settings: {
+                    title: 'Settings',
+                    language: 'Language',
+                    languageDesc: 'Select interface language',
+                    customBg: 'Custom Background',
+                    customBgDesc: 'Upload a custom image or video to replace the default background.',
+                    imgBgBtn: 'Image Background',
+                    videoBgBtn: 'Video Background',
+                    uploadImgBtn: 'Upload Image',
+                    uploadVideoBtn: 'Select Video',
+                    saveVideoBtn: '💾 Save Video Background',
+                    clearCacheBtn: 'Clear Background Cache',
+                    bgTip: 'Tips: Video files are stored locally as original binary (support 4K resolution).',
+                    defaultBgText: 'Use default background',
+                    searchSuggestions: 'Search Suggestions',
+                    searchSuggestionsDesc: 'Show relevant search suggestions as you type.',
+                    enableSuggestionText: 'Enable suggestions'
+                },
+                footer: '&copy; 2026 Qin_Xiaoyou Lightweight Search Engine',
+                docs: {
+                    title: 'MIT License',
+                    content: `MIT License
+Copyright © 2026 Qin_Xiaoyou
+Logo:Furry Search Engine®
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+https://github.com/qinyou-quantum`
+                },
+                quickLinks: {
+                    github: 'Github',
+                    tiktok: 'Tiktok',
+                    youtube: 'Youtube',
+                    facebook: 'Facebook',
+                    twitter: 'Twitter',
+                    bilibili: 'Bilibili',
+                    microsoft: 'Microsoft',
+                    music: 'Music',
+                    minecraft: 'Minecraft',
+                    curseforge: 'Curseforge',
+                    lanzouyun: 'Lanzouyun'
+                },
+                storageTips: {
+                    videoPreview: 'Video previewed! Click "Save" to make it persistent (survives refresh)',
+                    videoSaveSuccess: '✅ Video saved successfully (ID: {0})! Refresh to verify.',
+                    imageSaveSuccess: 'Image background applied successfully!',
+                    cacheClearSuccess: 'Cache cleared successfully!',
+                    selectVideoFirst: 'Please select a video first!',
+                    loadCacheFailed: 'Load cache failed: {0}',
+                    saveFailed: 'Save failed: {0}',
+                    clearCacheFailed: 'Clear cache failed: {0}',
+                    videoPreviewFailed: 'Video preview failed: Unsupported format or corrupted file'
+                }
+            },
+            zh: {
+                logo: {
+                    furry: 'Furry',
+                    searchEngine: 'Search Engine'
+                },
+                searchBox: '搜索全网...',
+                searchBtn: '搜索',
+                settings: {
+                    title: '设置',
+                    language: '语言',
+                    languageDesc: '选择界面显示语言',
+                    customBg: '自定义背景',
+                    customBgDesc: '上传自定义图片或视频替换默认背景。',
+                    imgBgBtn: '图片背景',
+                    videoBgBtn: '视频背景',
+                    uploadImgBtn: '上传图片',
+                    uploadVideoBtn: '选择视频',
+                    saveVideoBtn: '💾 保存视频背景',
+                    clearCacheBtn: '清除背景缓存',
+                    bgTip: '提示：视频文件以原始二进制形式存储在本地（支持4K分辨率）。',
+                    defaultBgText: '使用默认背景',
+                    searchSuggestions: '搜索建议',
+                    searchSuggestionsDesc: '输入时显示相关的搜索建议。',
+                    enableSuggestionText: '启用搜索建议'
+                },
+                footer: '&copy; 2026 Qin_Xiaoyou 轻量化搜索引擎',
+                docs: {
+                    title: 'MIT 许可证',
+                    content: `MIT 许可证（麻省理工学院开源协议许可）
+版权所有 © 2026 Qin_Xiaoyou
+商标：Furry Search Engine®
+特此授予任何获得本软件及相关文档文件（以下简称“软件”）副本的人免费使用权限，
+不受限制地处理本软件，包括但不限于使用、复制、修改、合并、发布、分发、再许可
+和/或销售软件副本的权利，并允许向其提供本软件的人做出上述行为，但须符合以下条件：
+
+上述版权声明和本许可声明应包含在本软件的所有副本或主要部分中。
+
+本软件按“原样”提供，不附带任何明示或暗示的担保，包括但不限于对适销性、
+特定用途适用性和非侵权性的担保。在任何情况下，作者或版权持有人均不对
+因使用本软件而引起的任何索赔、损害或其他责任承担责任，无论是在合同诉讼、
+侵权行为或其他方面，均不承担责任。
+
+https://github.com/qinyou-quantum`
+                },
+                quickLinks: {
+                    github: 'Github',
+                    tiktok: '抖音国际版',
+                    youtube: '油管',
+                    facebook: '脸书',
+                    twitter: '推特',
+                    bilibili: '哔哩哔哩',
+                    microsoft: '微软',
+                    music: '音乐',
+                    minecraft: 'Minecraft',
+                    curseforge: '模组库',
+                    lanzouyun: '蓝奏云'
+                },
+                storageTips: {
+                    videoPreview: '视频预览成功！点击"保存"使其持久化（刷新后仍生效）',
+                    videoSaveSuccess: '✅ 视频保存成功（ID：{0}）！刷新页面验证。',
+                    imageSaveSuccess: '图片背景应用成功！',
+                    cacheClearSuccess: '缓存清除成功！',
+                    selectVideoFirst: '请先选择视频！',
+                    loadCacheFailed: '加载缓存失败：{0}',
+                    saveFailed: '保存失败：{0}',
+                    clearCacheFailed: '清除缓存失败：{0}',
+                    videoPreviewFailed: '视频预览失败：不支持的格式或文件损坏'
+                }
+            }
+        };
+
+        let tempVideoFile = null;
+        let currentVideoUrl = null;
+        const bgState = {
+            activeType: 'default'
+        };
+        const sampleSuggestions = [
+            "2026福瑞春晚","万兽屋","极兽聚",
+            "福瑞文化正向价值","福瑞文化发展历程","福瑞动态姿势参考",
+            "兽装制作教程","新手兽装入门","兽装头部制作",
+            "兽装爪子教程","兽装材料清单","兽装保养方法",
+            "可爱兽装展示","平价兽装推荐","兽装拍照姿势",
+            "兽装活动礼仪","半装兽装介绍","迷你兽装制作",
+            "兽装工作室推荐","国内福瑞展会","福瑞展注意事项",
+            "国际兽展介绍","福瑞 IP 联名","福瑞周边推荐",
+            "福瑞壁纸高清","元宇宙兽聚","福瑞文化情绪价值",
+            "福瑞文化温柔瞬间","Hi Furry","果糖含量",
+            "绒兽聚"
+        ];
+        let currentLang = localStorage.getItem('appLang') || 'en';
+        updateLanguage(currentLang);
+        el.enLangBtn.addEventListener('click', () => switchLanguage('en'));
+        el.zhLangBtn.addEventListener('click', () => switchLanguage('zh'));
+        function switchLanguage(lang) {
+            if (lang === currentLang) return;
+            el.enLangBtn.classList.toggle('active', lang === 'en');
+            el.zhLangBtn.classList.toggle('active', lang === 'zh');
+            currentLang = lang;
+            localStorage.setItem('appLang', lang);
+            updateLanguage(lang);
+            el.storageSuccessTip.textContent = lang === 'zh' ? '语言切换成功！' : 'Language switched successfully!';
+            el.storageSuccessTip.style.display = 'block';
+            setTimeout(() => {
+                el.storageSuccessTip.style.display = 'none';
+            }, 2000);
+        }
+        function updateLanguage(lang) {
+            const texts = langMap[lang];
+            el.logoFurry.textContent = texts.logo.furry;
+            el.logoSearchEngine.textContent = texts.logo.searchEngine;
+            el.searchBox.placeholder = texts.searchBox;
+            el.searchBtn.innerHTML = `<i class="fas fa-search"></i> ${texts.searchBtn}`;
+            document.querySelector('.settings-title').innerHTML = `<i class="fas fa-sliders-h"></i> ${texts.settings.title}`;
+            document.querySelector('.docs-panel .settings-title').innerHTML = `<i class="fas fa-book"></i> ${texts.docs.title}`;
+            el.languageDesc.textContent = texts.settings.languageDesc;
+            document.querySelector('.setting-item:nth-child(2) .setting-title').innerHTML = `<i class="fas fa-image"></i> ${texts.settings.customBg}`;
+            el.bgDesc.textContent = texts.settings.customBgDesc;
+            el.imgBgBtn.textContent = texts.settings.imgBgBtn;
+            el.videoBgBtn.textContent = texts.settings.videoBgBtn;
+            el.uploadImgBtn.textContent = texts.settings.uploadImgBtn;
+            el.uploadVideoBtn.textContent = texts.settings.uploadVideoBtn;
+            el.saveVideoBtn.textContent = texts.settings.saveVideoBtn;
+            el.clearCacheBtn.textContent = texts.settings.clearCacheBtn;
+            el.bgTip.textContent = texts.settings.bgTip;
+            el.defaultBgText.textContent = texts.settings.defaultBgText;
+            document.querySelector('.setting-item:nth-child(3) .setting-title').innerHTML = `<i class="fas fa-lightbulb"></i> ${texts.settings.searchSuggestions}`;
+            el.suggestionDesc.textContent = texts.settings.searchSuggestionsDesc;
+            el.enableSuggestionText.textContent = texts.settings.enableSuggestionText;
+            el.footer.innerHTML = texts.footer;
+            el.docsContent.textContent = texts.docs.content;
+            const quickLinks = document.querySelectorAll('.quick-link');
+            quickLinks[0].innerHTML = `<i class="fab fa-github"></i> ${texts.quickLinks.github}`;
+            quickLinks[1].innerHTML = `<i class="fab fa-tiktok"></i> ${texts.quickLinks.tiktok}`;
+            quickLinks[2].innerHTML = `<i class="fab fa-youtube"></i> ${texts.quickLinks.youtube}`;
+            quickLinks[3].innerHTML = `<i class="fab fa-facebook"></i> ${texts.quickLinks.facebook}`;
+            quickLinks[4].innerHTML = `<i class="fab fa-twitter"></i> ${texts.quickLinks.twitter}`;
+            quickLinks[5].innerHTML = `<i class="fab fa-bilibili"></i> ${texts.quickLinks.bilibili}`;
+            quickLinks[6].innerHTML = `<i class="fab fa-microsoft"></i> ${texts.quickLinks.microsoft}`;
+            quickLinks[7].innerHTML = `<i class="fas fa-music"></i> ${texts.quickLinks.music}`;
+            quickLinks[8].innerHTML = `<i class="fas fa-gamepad"></i> ${texts.quickLinks.minecraft}`;
+            quickLinks[9].innerHTML = `<i class="fas fa-book"></i> ${texts.quickLinks.curseforge}`;
+            quickLinks[10].innerHTML = `<i class="fas fa-colod"></i> ${texts.quickLinks.lanzouyun}`;
+        }
+
+        el.docsBtn.onclick = () => {
+            el.settingsPanel.classList.remove('active');
+            el.docsPanel.classList.add('active');
+            el.docsBtn.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                el.docsBtn.style.transform = 'scale(1)';
+            }, 200);
+        };
+
+        el.closeDocs.onclick = () => {
+            el.docsPanel.classList.remove('active');
+            el.closeDocs.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                el.closeDocs.style.transform = 'scale(1)';
+            }, 200);
+        };
+
+        document.addEventListener('click', (e) => {
+            const isClickInsideDocs = el.docsPanel.contains(e.target) || el.docsBtn.contains(e.target);
+            if (!isClickInsideDocs && el.docsPanel.classList.contains('active')) {
+                el.docsPanel.classList.remove('active');
+            }
+        });
+
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                if (!('indexedDB' in window)) {
+                    const errMsg = currentLang === 'zh' ? '浏览器不支持IndexedDB（请使用Chrome/Firefox/Edge）' : 'Browser does not support IndexedDB (use Chrome/Firefox/Edge)';
+                    reject(new Error(errMsg));
+                    return;
+                }
+                const request = indexedDB.open('ManualVideoBgDB', 1);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('savedVideos')) {
+                        db.createObjectStore('savedVideos', { keyPath: 'videoId' });
+                    }
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => {
+                    const errMsg = currentLang === 'zh' ? `打开数据库失败：${e.target.error.message}` : `Failed to open DB: ${e.target.error.message}`;
+                    reject(new Error(errMsg));
+                };
+            });
+        }
+
+        async function saveVideoToDB(videoId, file) {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('savedVideos', 'readwrite');
+                const store = tx.objectStore('savedVideos');
+                const videoData = {
+                    videoId: videoId,
+                    file: file,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    saveTime: Date.now()
+                };
+                const request = store.put(videoData);
+                request.onsuccess = () => resolve();
+                request.onerror = (e) => {
+                    const errMsg = currentLang === 'zh' ? `保存失败：${e.target.error.message}` : `Save failed: ${e.target.error.message}`;
+                    reject(new Error(errMsg));
+                };
+            });
+        }
+
+        async function loadSavedVideo() {
+            const savedVideoId = localStorage.getItem('savedVideoId');
+            if (!savedVideoId) return null;
+            try {
+                const db = await openDB();
+                return new Promise((resolve) => {
+                    const tx = db.transaction('savedVideos', 'readonly');
+                    const store = tx.objectStore('savedVideos');
+                    const request = store.get(savedVideoId);
+                    request.onsuccess = (e) => resolve(e.target.result || null);
+                    request.onerror = () => resolve(null);
+                });
+            } catch (e) {
+                const errMsg = langMap[currentLang].storageTips.loadCacheFailed.replace('{0}', e.message);
+                el.storageErrorTip.textContent = errMsg;
+                el.storageErrorTip.style.display = 'block';
+                return null;
+            }
+        }
+
+        function previewVideoFile(file) {
+            if (currentVideoUrl) URL.revokeObjectURL(currentVideoUrl);
+            const url = URL.createObjectURL(file);
+            currentVideoUrl = url;
+            const video = el.customVideoBg;
+            video.pause();
+            video.src = '';
+            video.src = url;
+            video.muted = true;
+            video.loop = true;
+            video.playsInline = true;
+            video.onloadeddata = () => {
+                el.dynamicBg.style.opacity = 0;
+                video.style.opacity = document.body.classList.contains('dark-theme') ? 0.5 : 1;
+                video.play().catch(() => {});
+                bgState.activeType = 'video';
+            };
+            video.onerror = () => {
+                el.storageErrorTip.textContent = langMap[currentLang].storageTips.videoPreviewFailed;
+                el.storageErrorTip.style.display = 'block';
+                tempVideoFile = null;
+                el.saveVideoBtn.style.display = 'none';
+            };
+        }
+
+        el.uploadVideoBtn.onclick = () => el.videoUpload.click();
+        el.videoUpload.onchange = (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            tempVideoFile = file;
+            previewVideoFile(file);
+            el.saveVideoBtn.style.display = 'inline-block';
+            el.storageSuccessTip.textContent = langMap[currentLang].storageTips.videoPreview;
+            el.storageSuccessTip.style.display = 'block';
+            el.storageErrorTip.style.display = 'none';
+        };
+
+        el.saveVideoBtn.onclick = async () => {
+            if (!tempVideoFile) {
+                el.storageErrorTip.textContent = langMap[currentLang].storageTips.selectVideoFirst;
+                el.storageErrorTip.style.display = 'block';
+                return;
+            }
+            try {
+                const videoId = `vid-${Date.now()}-${btoa(tempVideoFile.name).slice(0, 8)}`;
+                await saveVideoToDB(videoId, tempVideoFile);
+                localStorage.setItem('savedVideoId', videoId);
+                localStorage.setItem('savedVideoName', tempVideoFile.name);
+                el.storageSuccessTip.textContent = langMap[currentLang].storageTips.videoSaveSuccess.replace('{0}', videoId);
+                el.storageSuccessTip.style.display = 'block';
+                el.storageErrorTip.style.display = 'none';
+                el.saveVideoBtn.style.display = 'none';
+                el.defaultBgToggle.checked = false;
+            } catch (e) {
+                const errMsg = langMap[currentLang].storageTips.saveFailed.replace('{0}', e.message);
+                el.storageErrorTip.textContent = errMsg;
+                el.storageErrorTip.style.display = 'block';
+            }
+        };
+
+        el.clearCacheBtn.onclick = async () => {
+            try {
+                if (currentVideoUrl) {
+                    URL.revokeObjectURL(currentVideoUrl);
+                    currentVideoUrl = null;
+                }
+                tempVideoFile = null;
+                const db = await openDB();
+                const tx = db.transaction('savedVideos', 'readwrite');
+                await tx.objectStore('savedVideos').clear();
+                localStorage.removeItem('savedVideoId');
+                localStorage.removeItem('savedVideoName');
+            } catch (e) {
+                const errMsg = langMap[currentLang].storageTips.clearCacheFailed.replace('{0}', e.message);
+                el.storageErrorTip.textContent = errMsg;
+                el.storageErrorTip.style.display = 'block';
+            } finally {
+                el.defaultBgToggle.checked = true;
+                el.dynamicBg.style.opacity = 1;
+                el.customVideoBg.style.opacity = 0;
+                el.customBg.style.opacity = 0;
+                bgState.activeType = 'default';
+                el.saveVideoBtn.style.display = 'none';
+                el.storageSuccessTip.textContent = langMap[currentLang].storageTips.cacheClearSuccess;
+                el.storageSuccessTip.style.display = 'block';
+                setTimeout(() => {
+                    el.storageSuccessTip.style.display = 'none';
+                    el.storageErrorTip.style.display = 'none';
+                }, 3000);
+            }
+        };
+
+        el.imgBgBtn.addEventListener('click', () => {
+            el.imgBgBtn.classList.add('active');
+            el.videoBgBtn.classList.remove('active');
+            el.uploadImgBtn.style.display = 'inline-block';
+            el.uploadVideoBtn.style.display = 'none';
+            el.saveVideoBtn.style.display = 'none';
+        });
+
+        el.videoBgBtn.addEventListener('click', () => {
+            el.videoBgBtn.classList.add('active');
+            el.imgBgBtn.classList.remove('active');
+            el.uploadVideoBtn.style.display = 'inline-block';
+            el.uploadImgBtn.style.display = 'none';
+            if (tempVideoFile) {
+                el.saveVideoBtn.style.display = 'inline-block';
+            }
+        });
+
+        el.uploadImgBtn.addEventListener('click', () => {
+            el.bgUpload.click();
+        });
+
+        el.bgUpload.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                el.customBg.src = e.target.result;
+                el.customBg.style.opacity = document.body.classList.contains('dark-theme') ? 0.5 : 1;
+                el.dynamicBg.style.opacity = 0;
+                el.customVideoBg.style.opacity = 0;
+                bgState.activeType = 'image';
+                el.defaultBgToggle.checked = false;
+                localStorage.setItem('customBg', e.target.result);
+                el.storageSuccessTip.textContent = langMap[currentLang].storageTips.imageSaveSuccess;
+                el.storageSuccessTip.style.display = 'block';
+                setTimeout(() => {
+                    el.storageSuccessTip.style.display = 'none';
+                }, 3000);
+            };
+            reader.readAsDataURL(file);
+        });
+        el.settingsBtn.onclick = () => {
+            el.docsPanel.classList.remove('active');
+            el.settingsPanel.classList.add('active');
+            el.settingsBtn.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                el.settingsBtn.style.transform = 'scale(1)';
+            }, 200);
+        };
+
+        el.closeSettings.onclick = () => {
+            el.settingsPanel.classList.remove('active');
+            el.closeSettings.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                el.closeSettings.style.transform = 'scale(1)';
+            }, 200);
+        };
+        document.addEventListener('click', (e) => {
+            const isClickInsideSettings = el.settingsPanel.contains(e.target) || el.settingsBtn.contains(e.target);
+            if (!isClickInsideSettings && el.settingsPanel.classList.contains('active')) {
+                el.settingsPanel.classList.remove('active');
+            }
+        });
+
+        el.themeToggle.onclick = () => {
+            document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList.contains('dark-theme');
+            el.themeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            localStorage.setItem('darkTheme', isDark);
+            
+            if (bgState.activeType === 'image') {
+                el.customBg.style.opacity = isDark ? 0.5 : 1;
+            } else if (bgState.activeType === 'video') {
+                el.customVideoBg.style.opacity = isDark ? 0.5 : 1;
+            }
+        };
+
+        el.searchBox.addEventListener('input', () => {
+            if (!el.suggestionsToggle.checked) {
+                el.suggestionsContainer.classList.remove('active');
+                return;
+            }
+            const query = el.searchBox.value.trim().toLowerCase();
+            if (query.length < 1) {
+                el.suggestionsContainer.classList.remove('active');
+                return;
+            }
+            const filtered = sampleSuggestions.filter(item => 
+                item.toLowerCase().includes(query)
+            ).slice(0, 10);
+            el.suggestionsBox.innerHTML = '';
+            if (filtered.length === 0) {
+                el.suggestionsContainer.classList.remove('active');
+                return;
+            }
+            filtered.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.textContent = item;
+                div.addEventListener('click', () => {
+                    el.searchBox.value = item;
+                    el.suggestionsContainer.classList.remove('active');
+                });
+                el.suggestionsBox.appendChild(div);
+            });
+            el.suggestionsContainer.classList.add('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!el.searchGroup.contains(e.target)) {
+                el.suggestionsContainer.classList.remove('active');
+            }
+        });
+
+        el.searchBtn.addEventListener('click', () => {
+            const query = el.searchBox.value.trim();
+            if (query) {
+                const searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+                window.open(searchUrl, '_blank');
+            }
+        });
+        el.searchBox.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                el.searchBtn.click();
+            }
+        });
+
+        el.defaultBgToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                el.dynamicBg.style.opacity = 1;
+                el.customBg.style.opacity = 0;
+                el.customVideoBg.style.opacity = 0;
+                bgState.activeType = 'default';
+            } else if (bgState.activeType === 'image') {
+                el.dynamicBg.style.opacity = 0;
+                el.customBg.style.opacity = document.body.classList.contains('dark-theme') ? 0.5 : 1;
+            } else if (bgState.activeType === 'video') {
+                el.dynamicBg.style.opacity = 0;
+                el.customVideoBg.style.opacity = document.body.classList.contains('dark-theme') ? 0.5 : 1;
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            el.mainContainer.style.opacity = 1;
+            
+            if (localStorage.getItem('darkTheme') === 'true') {
+                document.body.classList.add('dark-theme');
+                el.themeIcon.className = 'fas fa-sun';
+            }
+            
+            const customBg = localStorage.getItem('customBg');
+            if (customBg) {
+                el.customBg.src = customBg;
+                el.customBg.style.opacity = document.body.classList.contains('dark-theme') ? 0.5 : 1;
+                el.dynamicBg.style.opacity = 0;
+                bgState.activeType = 'image';
+                el.defaultBgToggle.checked = false;
+            }
+            
+            loadSavedVideo().then(videoData => {
+                if (videoData) {
+                    previewVideoFile(videoData.file);
+                    el.defaultBgToggle.checked = false;
+                }
+            });
+            
+            el.enLangBtn.classList.toggle('active', currentLang === 'en');
+            el.zhLangBtn.classList.toggle('active', currentLang === 'zh');
+        });
+    </script>
+</body>
+</html>
