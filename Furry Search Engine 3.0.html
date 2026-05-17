@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Furry Search Engine 2.0</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #165DFF;
+            --bg: #ffffff;
+            --surface: #ffffff;
+            --text: #1D2129;
+            --text-secondary: #4E5969;
+            --border: #E5E6EB;
+            --shadow: 0 1px 6px rgba(169,172,175,0.28);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg-opacity: 1;
+            --default-bg-color: #F5F7FA;
+            --logo-main: #165DFF;
+            --logo-sub: #1D2129;
+        }
+        body {
+            --primary: #4080FF;
+            --bg: #141414;
+            --surface: #1F1F1F;
+            --text: #F7F8FA;
+            --text-secondary: #86909C;
+            --border: #303030;
+            --shadow: 0 1px 6px rgba(0,0,0,0.5);
+            --bg-opacity: 0.5;
+            --default-bg-color: #0F172A;
+            --logo-main: #4080FF;
+            --logo-sub: #F7F8FA;
+        }
+        .light-theme {
+            --primary: #165DFF;
+            --bg: #ffffff;
+            --surface: #ffffff;
+            --text: #1D2129;
+            --text-secondary: #4E5969;
+            --border: #E5E6EB;
+            --shadow: 0 1px 6px rgba(169,172,175,0.28);
+            --bg-opacity: 1;
+            --default-bg-color: #F5F7FA;
+            --logo-main: #165DFF;
+            --logo-sub: #1D2129;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            font-weight: 400;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: var(--transition);
+            line-height: 1.5;
+        }
+        .loader-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: var(--bg);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            will-change: opacity, display;
+        }
+        .loader-logo {
+            font-size: 4rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+        }
+        .loader-logo .furry {
+            color: var(--primary);
+        }
+        .loader-logo .search-engine {
+            color: var(--logo-sub);
+        }
+        .loader-progress {
+            width: 80%;
+            max-width: 400px;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .loader-progress-bar {
+            width: 0;
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            transition: width 3s linear;
+        }
+        .search-loading-mask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.2);
+            z-index: 9998;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .search-loading-mask.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .search-loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8) translateZ(0);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow);
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        .search-loading.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1) translateZ(0);
+            pointer-events: auto;
+        }
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            transform: translateZ(0);
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--text);
+        }
+        .bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .dynamic-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--default-bg-color);
+            opacity: var(--bg-opacity);
+            transition: opacity 1s ease;
+            z-index: -2;
+        }
+        .custom-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease;
+            z-index: -1;
+        }
+        .custom-video-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease;
+            z-index: -1;
+        }
+        .custom-bg.active, .custom-video-bg.active {
+            opacity: var(--bg-opacity);
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: var(--transition);
+            opacity: 0;
+        }
+        .logo {
+            font-size: 3.5rem;
+            font-weight: 400;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out;
+            letter-spacing: -0.02em;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+        }
+        .logo .furry {
+            color: var(--logo-main);
+        }
+        .logo .search-engine {
+            color: var(--logo-sub);
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .search-group {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease-out 0.2s forwards;
+            opacity: 0;
+            z-index: 200;
+        }
+        .search-box {
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 400;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            outline: none;
+        }
+        .search-box:focus {
+            box-shadow: 0 1px 12px rgba(22,93,255,0.25);
+            border-color: var(--primary);
+        }
+        .search-btn {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .search-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22,93,255,0.3);
+        }
+        .suggestions-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 20px auto;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                        margin-bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+                        opacity 0.3s ease;
+            opacity: 0;
+            z-index: 150;
+        }
+        .suggestions-container.active {
+            max-height: 300px;
+            margin-bottom: 20px;
+            opacity: 1;
+        }
+        .suggestions {
+            width: 100%;
+            background: var(--surface);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 8px 0;
+            transform-origin: top center;
+            transform: scaleY(0.95);
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+                        box-shadow 0.3s ease;
+        }
+        .suggestions-container.active .suggestions {
+            transform: scaleY(1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .suggestion-item {
+            padding: 12px 24px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            transform: translateX(-10px);
+            opacity: 0;
+            animation: slideIn 0.3s ease forwards;
+        }
+        .suggestion-item:nth-child(1) { animation-delay: 0.05s; }
+        .suggestion-item:nth-child(2) { animation-delay: 0.1s; }
+        .suggestion-item:nth-child(3) { animation-delay: 0.15s; }
+        .suggestion-item:nth-child(4) { animation-delay: 0.2s; }
+        .suggestion-item:nth-child(5) { animation-delay: 0.25s; }
+        .suggestion-item:nth-child(6) { animation-delay: 0.3s; }
+        .suggestion-item:nth-child(7) { animation-delay: 0.35s; }
+        .suggestion-item:nth-child(8) { animation-delay: 0.4s; }
+        .suggestion-item:nth-child(9) { animation-delay: 0.45s; }
+        .suggestion-item:nth-child(10) { animation-delay: 0.5s; }
+        @keyframes slideIn {
+            from { transform: translateX(-10px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .suggestion-item:hover {
+            background: rgba(22,93,255,0.05);
+            border-radius: 12px;
+            margin: 0 8px;
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(22,93,255,0.1);
+        }
+        .light-theme .suggestion-item:hover {
+            background: rgba(64,128,255,0.08);
+            box-shadow: 0 2px 8px rgba(64,128,255,0.1);
+        }
+        .suggestions::-webkit-scrollbar { width: 6px; }
+        .suggestions::-webkit-scrollbar-track { background: transparent; border-radius: 10px; }
+        .suggestions::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; transition: background 0.2s ease; }
+        .suggestions::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+        .quick-links {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out 0.4s forwards;
+            opacity: 0;
+            position: relative;
+            z-index: 100;
+            background: var(--surface);
+            padding: 10px;
+            border-radius: 8px;
+            transition: var(--transition);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .quick-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 400;
+            transition: var(--transition);
+        }
+        .quick-link:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 400;
+            animation: fadeInUp 0.8s ease-out 0.6s forwards;
+            opacity: 0;
+        }
+        .action-btn {
+            position: fixed;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 400;
+            transition: var(--transition);
+            z-index: 1000;
+            pointer-events: auto;
+        }
+        .action-btn:hover { transform: scale(1.1); box-shadow: var(--shadow); }
+        .theme-toggle { top: 20px; left: 20px; }
+        .settings-btn { top: 20px; right: 20px; }
+        .docs-btn { top: 80px; right: 20px; }
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100%;
+            background: var(--surface);
+            box-shadow: -2px 0 20px rgba(0,0,0,0.2);
+            z-index: 1001;
+            padding: 30px;
+            transition: right 0.5s cubic-bezier(0.34,1.56,0.64,1);
+            overflow-y: auto;
+        }
+        .settings-panel::-webkit-scrollbar { width: 6px; }
+        .settings-panel::-webkit-scrollbar-track { background: transparent; border-radius: 10px; }
+        .settings-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; transition: background 0.2s ease; }
+        .settings-panel::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+        .light-theme .settings-panel::-webkit-scrollbar-thumb { background: #444; }
+        .light-theme .settings-panel::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+        .settings-panel.active { right: 0; }
+        .docs-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100%;
+            background: var(--surface);
+            box-shadow: -2px 0 20px rgba(0,0,0,0.2);
+            z-index: 1002;
+            padding: 30px;
+            transition: right 0.5s cubic-bezier(0.34,1.56,0.64,1);
+            overflow-y: auto;
+            scrollbar-width: 8px;
+        }
+        .docs-panel::-webkit-scrollbar {
+            width: 8px !important;
+        }
+        .docs-panel::-webkit-scrollbar-track {
+            background: var(--surface) !important;
+            border-radius: 10px !important;
+        }
+        .docs-panel::-webkit-scrollbar-thumb {
+            background: var(--border) !important;
+            border-radius: 10px !important;
+            transition: background 0.2s ease !important;
+        }
+        .docs-panel::-webkit-scrollbar-thumb:hover {
+            background: var(--primary) !important;
+        }
+        .light-theme .docs-panel::-webkit-scrollbar-thumb {
+            background: #444 !important;
+        }
+        .light-theme .docs-panel::-webkit-scrollbar-thumb:hover {
+            background: var(--primary) !important;
+        }
+        .docs-panel.active { right: 0; }
+        .docs-content {
+            white-space: pre-line !important;
+            padding: 10px 0 !important;
+            font-size: 14px !important;
+            line-height: 1.8 !important;
+            color: var(--text) !important;
+            word-wrap: break-word !important;
+            word-break: normal !important;
+        }
+        .docs-content p {
+            margin-bottom: 16px !important;
+        }
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        .settings-title { font-size: 24px; font-weight: 500; }
+        .close-settings {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .close-settings:hover { transform: scale(1.2); }
+        .setting-item {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .setting-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .setting-title i.fa-magic {
+            color: var(--primary);
+        }
+        .toggle-switch { position: relative; display: inline-block; width: 52px; height: 26px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .toggle-slider:before {
+            position: absolute; content: "";
+            height: 18px; width: 18px; left: 4px; bottom: 4px;
+            background: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .toggle-slider { background: var(--primary); }
+        input:checked + .toggle-slider:before { transform: translateX(26px); }
+        .upload-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
+            border: none;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+        .upload-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22,93,255,0.3);
+        }
+        .save-video-btn {
+            background: #52c41a !important;
+        }
+        .save-video-btn:hover {
+            box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3) !important;
+        }
+        .clear-cache-btn {
+            background: #86909C;
+            margin-top: 10px;
+        }
+        .clear-cache-btn:hover {
+            background: #ff4d4f;
+            box-shadow: 0 4px 12px rgba(255,77,79,0.3);
+        }
+        .reset-bg-btn {
+            background: #fa8c16 !important;
+            margin-top: 10px;
+        }
+        .reset-bg-btn:hover {
+            box-shadow: 0 4px 12px rgba(250,140,22,0.3) !important;
+        }
+        #bgUpload, #videoUpload { display: none; }
+        .bg-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .bg-type-btn {
+            padding: 8px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+            font-weight: 400;
+        }
+        .bg-type-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .search-source-selector {
+            width: 100%;
+            padding: 10px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .search-source-selector:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(22,93,255,0.1);
+        }
+        .light-theme .search-source-selector {
+            background: #2a2a2a;
+            border-color: #444;
+        }
+        .tip-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        .error-tip {
+            color: #ff4d4f;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        .success-tip {
+            color: #52c41a;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        .toast-notice {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 24px;
+            color: var(--text);
+            font-size: 14px;
+            box-shadow: var(--shadow);
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .toast-notice.active {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        @media (max-width: 768px) {
+            .loader-logo { font-size: 2.5rem; }
+            .loader-progress { width: 90%; }
+            .logo { font-size: 2.5rem; flex-direction: column; text-align: center; gap: 4px; }
+            .settings-panel, .docs-panel { width: 100%; right: -100%; z-index: 1001; }
+            .quick-links { flex-direction: column; align-items: center; }
+            .bg-type-selector { flex-direction: column; }
+            .upload-btn { margin-right: 0; margin-bottom: 10px; width: 100%; }
+            .clear-cache-btn, .reset-bg-btn { width: 100%; margin-right: 0; }
+            .suggestions-container { width: 90%; }
+            .action-btn { width: 44px; height: 44px; font-size: 18px; }
+            .docs-btn { top: 70px; }
+            .toast-notice { width: 90%; text-align: center; }
+            .search-loading { padding: 16px 24px; }
+            .loading-spinner { width: 20px; height: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader-page" id="loaderPage">
+        <div class="loader-logo">
+            <span class="furry">Furry</span>
+            <span class="search-engine">Search Engine</span>
+        </div>
+        <div class="loader-progress">
+            <div class="loader-progress-bar" id="loaderProgressBar"></div>
+        </div>
+    </div>
+    <div class="search-loading-mask" id="searchLoadingMask"></div>
+    <div class="search-loading" id="searchLoading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Searching...</div>
+    </div>
+    <div class="bg-container">
+        <div class="dynamic-bg" id="dynamicBg"></div>
+        <img class="custom-bg" id="customBg" alt="Custom Background">
+        <video class="custom-video-bg" id="customVideoBg" autoplay loop muted playsinline></video>
+    </div>
+    <div class="toast-notice" id="toastNotice">Switched search source successfully！</div>
+    <button class="action-btn theme-toggle" id="themeToggle">
+        <i class="fas fa-sun" id="themeIcon"></i>
+    </button>
+    <button class="action-btn settings-btn" id="settingsBtn">
+        <i class="fas fa-cog"></i>
+    </button>
+    <button class="action-btn docs-btn" id="docsBtn">
+        <i class="fas fa-book"></i>
+    </button>
+    <div class="container" id="mainContainer">
+        <h1 class="logo">
+            <span class="furry">Furry</span>
+            <span class="search-engine">Search Engine</span>
+        </h1>
+        <div class="search-group" id="searchGroup">
+            <input type="text" class="search-box" id="searchBox" placeholder="Search the web..." autocomplete="off">
+            <button class="search-btn" id="searchBtn">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </div>
+        <div class="suggestions-container" id="suggestionsContainer">
+            <div class="suggestions" id="suggestionsBox"></div>
+        </div>
+        <div class="quick-links">
+            <a href="https://github.com" target="_blank" class="quick-link"><i class="fab fa-github"></i> Github</a>
+            <a href="https://douyin.com" target="_blank" class="quick-link"><i class="fab fa-tiktok"></i> Tiktok</a>
+            <a href="https://youtube.com" target="_blank" class="quick-link"><i class="fab fa-youtube"></i>Youtube</a>
+            <a href="https://facebook.com" target="_blank" class="quick-link"><i class="fab fa-facebook"></i>Facebook</a>
+            <a href="https://www.sotwe.com" target="_blank" class="quick-link"><i class="fab fa-twitter"></i>Twitter</a>
+            <a href="https://bilibili.com" target="_blank" class="quick-link"><i class="fab fa-bilibili"></i>Bilibili</a>
+            <a href="https://microsoft.com" target="_blank" class="quick-link"><i class="fab fa-microsoft"></i>Microsoft</a>
+            <a href="https://cwo.cc/musicc" target="_blank" class="quick-link"><i class="fas fa-music"></i>Music</a>
+            <a href="https://minecraft.com" target="_blank" class="quick-link"><i class="fas fa-gamepad"></i>Minecraft</a>
+            <a href="https://www.curseforge.com/minecraft" target="_blank" class="quick-link"><i class="fas fa-book"></i>Curseforge</a>
+            <a href="https://pc.woozooo.com/mydisk.php" target="_blank" class="quick-link"><i class="fas fa-cloud"></i>Lanzouyun</a>
+            <a href="https://hi-furry.cn" target="_blank" class="quick-link"><i class="fas fa-paw"></i>Hi-Furry</a>
+            <a href="https://pixiv.com" target="_blank" class="quick-link"><i class="fas fa-image"></i>Pixiv</a>
+            <a href="https://m.baidu.com/video/page?pd=video_page&nid=10316260500972886079&sign=8850426682761795691&word=%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6%E6%95%99%E5%AD%A6%E8%A7%86%E9%A2%91%E5%BF%85%E4%BF%AE%E4%BA%8C&oword=%E9%AB%98%E4%B8%AD%E6%95%B0%E5%AD%A6%E6%95%99%E5%AD%A6%E8%A7%86%E9%A2%91%E5%BF%85%E4%BF%AE%E4%BA%8C&atn=index&frsrcid=5376&ext=%7B%22jsy%22%3A1%7D&top=%7B%22sfhs%22%3A1%2C%22_hold%22%3A2%7D&compilation_ext=%7B%22hejiNid%22%3A%2215474622013107541844%22%2C%22compilation_id%22%3A%2216386944627669625471%22%2C%22hjtab%22%3A2%2C%22asp%22%3A1%7D&sl=4&lid=7858382205480176646&fr0=A15&fr1=C&_t=1778633625618" target="_blank" class="quick-link"><i class="fas fa-image"></i>数学</a>
+        </div>
+        <div class="footer">
+            &copy; 2026 Qin_Xiaoyou Lightweight Search Engine
+        </div>
+    </div>
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h2 class="settings-title"><i class="fas fa-sliders-h"></i> Settings</h2>
+            <button class="close-settings" id="closeSettings"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-image"></i> Custom Background</div>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                Upload a custom image or video to replace the default background.
+            </p>
+            <div class="bg-type-selector">
+                <button class="bg-type-btn active" id="imgBgBtn">Image Background</button>
+                <button class="bg-type-btn" id="videoBgBtn">Video Background</button>
+            </div>
+            <input type="file" id="bgUpload" accept="image/*">
+            <input type="file" id="videoUpload" accept="video/mp4,video/webm,video/ogg">
+            <button class="upload-btn" id="uploadImgBtn">Upload Image</button>
+            <button class="upload-btn" id="uploadVideoBtn" style="display: none;">Select Video</button>
+            <button class="upload-btn save-video-btn" id="saveVideoBtn" style="display: none;">💾 Save Video Background</button>
+            <button class="upload-btn clear-cache-btn" id="clearCacheBtn">Clear Background Cache</button>
+            <button class="upload-btn reset-bg-btn" id="resetBgBtn">🔄 Reset Custom Background</button>
+            <div class="tip-text">Tips: Video files are stored locally as original binary (support 4K resolution).</div>
+            <div id="storageErrorTip" class="error-tip" style="display: none;"></div>
+            <div id="storageSuccessTip" class="success-tip" style="display: none;"></div>
+            <div style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 14px;">Use default background</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="defaultBgToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-lightbulb"></i> Search Suggestions</div>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                Show relevant search suggestions as you type.
+            </p>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 14px;">Enable suggestions</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="suggestionsToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-shield-halved"></i> Safe Search</div>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                Disable Cookie collection when searching for better privacy protection.
+            </p>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 14px;">Enable Safe Search</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="safeSearchToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-search"></i> Search Source</div>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                Customize the default search engine for your queries.
+            </p>
+            <select class="search-source-selector" id="searchSourceSelector">
+                <option value="bing">Bing</option>
+                <option value="google">Google</option>
+                <option value="baidu">Baidu</option>
+            </select>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-magic"></i> Enhanced UI Interaction</div>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                Enable startup loading animation and search loading effect for better experience.
+            </p>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 14px;">Enable UI Enhancement</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="uiEnhanceToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="docs-panel" id="docsPanel" style="z-index: 1002;">
+        <div class="settings-header">
+            <h2 class="settings-title"><i class="fas fa-book"></i> MIT License</h2>
+            <button class="close-settings" id="closeDocs"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="docs-content">
+            <p>MIT License</p>
+            <p>Copyright © 2026 Qin_Xiaoyou</p>
+            <p>Logo:Furry Search Engine®</p>
+            <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files the "Software limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+            <p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+            <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+            <p>https://github.com/qinyou-quantum</p>
+            <p>这一次我们再次做出了历史性的更新！重做了整个引擎的框架！真正的2.0！</p>
+            <p>对了！张宗胜就是个机霸！</p>
+        </div>
+    </div>
+
+    <script>
+        const el = {
+            loaderPage: document.getElementById('loaderPage'),
+            loaderProgressBar: document.getElementById('loaderProgressBar'),
+            searchLoading: document.getElementById('searchLoading'),
+            searchLoadingMask: document.getElementById('searchLoadingMask'),
+            uiEnhanceToggle: document.getElementById('uiEnhanceToggle'),
+            themeToggle: document.getElementById('themeToggle'),
+            themeIcon: document.getElementById('themeIcon'),
+            settingsBtn: document.getElementById('settingsBtn'),
+            settingsPanel: document.getElementById('settingsPanel'),
+            closeSettings: document.getElementById('closeSettings'),
+            docsBtn: document.getElementById('docsBtn'),
+            docsPanel: document.getElementById('docsPanel'),
+            closeDocs: document.getElementById('closeDocs'),
+            searchBox: document.getElementById('searchBox'),
+            searchBtn: document.getElementById('searchBtn'),
+            suggestionsBox: document.getElementById('suggestionsBox'),
+            suggestionsContainer: document.getElementById('suggestionsContainer'),
+            dynamicBg: document.getElementById('dynamicBg'),
+            customBg: document.getElementById('customBg'),
+            customVideoBg: document.getElementById('customVideoBg'),
+            bgUpload: document.getElementById('bgUpload'),
+            videoUpload: document.getElementById('videoUpload'),
+            uploadImgBtn: document.getElementById('uploadImgBtn'),
+            uploadVideoBtn: document.getElementById('uploadVideoBtn'),
+            saveVideoBtn: document.getElementById('saveVideoBtn'),
+            clearCacheBtn: document.getElementById('clearCacheBtn'),
+            defaultBgToggle: document.getElementById('defaultBgToggle'),
+            suggestionsToggle: document.getElementById('suggestionsToggle'),
+            imgBgBtn: document.getElementById('imgBgBtn'),
+            videoBgBtn: document.getElementById('videoBgBtn'),
+            storageErrorTip: document.getElementById('storageErrorTip'),
+            storageSuccessTip: document.getElementById('storageSuccessTip'),
+            mainContainer: document.getElementById('mainContainer'),
+            searchGroup: document.getElementById('searchGroup'),
+            safeSearchToggle: document.getElementById('safeSearchToggle'),
+            searchSourceSelector: document.getElementById('searchSourceSelector'),
+            toastNotice: document.getElementById('toastNotice'),
+            resetBgBtn: document.getElementById('resetBgBtn')
+        };
+        let tempVideoFile = null;
+        let currentVideoUrl = null;
+        const bgState = {
+            activeType: 'default'
+        };
+        const sampleSuggestions = [
+            "2026福瑞春晚","万兽屋","极兽聚",
+            "福瑞文化正向价值","福瑞文化发展历程","福瑞动态姿势参考",
+            "兽装制作教程","新手兽装入门","兽装头部制作",
+            "兽装爪子教程","兽装材料清单","兽装保养方法",
+            "可爱兽装展示","平价兽装推荐","兽装拍照姿势",
+            "兽装活动礼仪","半装兽装介绍","迷你兽装制作",
+            "兽装工作室推荐","国内福瑞展会","福瑞展注意事项",
+            "国际兽展介绍","福瑞 IP 联名","福瑞周边推荐",
+            "福瑞壁纸高清","元宇宙兽聚","福瑞文化情绪价值",
+            "福瑞文化温柔瞬间","Hi Furry","果糖含量",
+            "绒兽聚","抖音","bilibili哔哩哔哩","Kugou music酷狗音乐"
+        ];
+        const searchSourceMap = {
+            bing: 'https://www.bing.com/search?q=',
+            google: 'https://www.google.com/search?q=',
+            baidu: 'https://www.baidu.com/s?wd='
+        };
+        function showToast(text = 'Operation successful！') {
+            el.toastNotice.textContent = text;
+            el.toastNotice.classList.add('active');
+            setTimeout(() => {
+                el.toastNotice.classList.remove('active');
+            }, 2000);
+        }
+        function initStartupLoader() {
+            window.onload = () => {
+                const isUiEnhance = localStorage.getItem('uiEnhance') !== 'false';
+                if (!isUiEnhance) {
+                    el.loaderPage.style.display = 'none';
+                    el.mainContainer.style.opacity = 1;
+                    el.searchBox.focus();
+                    return;
+                }
+                document.body.style.overflow = 'hidden';
+                el.loaderProgressBar.style.width = '100%';
+                setTimeout(() => {
+                    el.loaderPage.style.opacity = 0;
+                    el.loaderPage.style.transition = 'opacity 0.5s ease';
+                    setTimeout(() => {
+                        el.loaderPage.style.display = 'none';
+                        el.mainContainer.style.opacity = 1;
+                        el.searchBox.focus();
+                        document.body.style.overflow = 'auto';
+                    }, 500);
+                }, 3000);
+            };
+        }
+        function searchWithLoading(query) {
+            const isUiEnhance = localStorage.getItem('uiEnhance') !== 'false';
+            if (!isUiEnhance) {
+                performSearchCore(query);
+                el.searchBox.value = '';
+                return;
+            }
+            document.body.style.overflow = 'hidden';
+            el.searchLoadingMask.classList.add('active');
+            el.searchLoading.classList.add('active');
+            setTimeout(() => {
+                performSearchCore(query);
+                document.body.style.overflow = 'auto';
+                el.searchLoadingMask.classList.remove('active');
+                el.searchLoading.classList.remove('active');
+                setTimeout(() => {
+                    el.searchBox.value = '';
+                    el.searchBox.blur();
+                }, 1000);
+            }, 2000);
+        }
+        function performSearchCore(query) {
+            const selectedSource = localStorage.getItem('searchSource') || 'bing';
+            const searchBaseUrl = searchSourceMap[selectedSource];
+            const searchUrl = `${searchBaseUrl}${encodeURIComponent(query)}`;
+            if (el.safeSearchToggle.checked) {
+                window.open(searchUrl, '_blank', 'noopener,noreferrer,disableCookie=true');
+            } else {
+                window.open(searchUrl, '_blank');
+            }
+        }
+        el.docsBtn.onclick = () => {
+            el.settingsPanel.classList.remove('active');
+            el.docsPanel.classList.add('active');
+            el.docsBtn.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                el.docsBtn.style.transform = 'scale(1)';
+            }, 200);
+        };
+        el.closeDocs.onclick = () => {
+            el.docsPanel.classList.remove('active');
+            el.closeDocs.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                el.closeDocs.style.transform = 'scale(1)';
+            }, 200);
+        };
+        document.addEventListener('click', (e) => {
+            const isClickInsideDocs = el.docsPanel.contains(e.target) || el.docsBtn.contains(e.target);
+            const isClickInsideSettings = el.settingsPanel.contains(e.target) || el.settingsBtn.contains(e.target);
+            if (!isClickInsideDocs && el.docsPanel.classList.contains('active')) {
+                el.docsPanel.classList.remove('active');
+            }
+            if (!isClickInsideSettings && el.settingsPanel.classList.contains('active')) {
+                el.settingsPanel.classList.remove('active');
+            }
+        });
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                if (!('indexedDB' in window)) {
+                    reject(new Error('Browser does not support IndexedDB (use Chrome/Firefox/Edge)'));
+                    return;
+                }
+                const request = indexedDB.open('ManualVideoBgDB', 1);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('savedVideos')) {
+                        db.createObjectStore('savedVideos', { keyPath: 'videoId' });
+                    }
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => reject(new Error(`Failed to open DB: ${e.target.error.message}`));
+            });
+        }
+        async function saveVideoToDB(videoId, file) {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('savedVideos', 'readwrite');
+                const store = tx.objectStore('savedVideos');
+                const videoData = {
+                    videoId: videoId,
+                    file: file,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    saveTime: Date.now()
+                };
+                const request = store.put(videoData);
+                request.onsuccess = () => resolve();
+                request.onerror = (e) => reject(new Error(`Save failed: ${e.target.error.message}`));
+            });
+        }
+        async function loadSavedVideo() {
+            const savedVideoId = localStorage.getItem('savedVideoId');
+            if (!savedVideoId) return null;
+            try {
+                const db = await openDB();
+                return new Promise((resolve) => {
+                    const tx = db.transaction('savedVideos', 'readonly');
+                    const store = tx.objectStore('savedVideos');
+                    const request = store.get(savedVideoId);
+                    request.onsuccess = (e) => resolve(e.target.result || null);
+                    request.onerror = () => resolve(null);
+                });
+            } catch (e) {
+                el.storageErrorTip.textContent = `Load cache failed: ${e.message}`;
+                el.storageErrorTip.style.display = 'block';
+                return null;
+            }
+        }
+        function previewVideoFile(file) {
+            if (currentVideoUrl) URL.revokeObjectURL(currentVideoUrl);
+            const url = URL.createObjectURL(file);
+            currentVideoUrl = url;
+            const video = el.customVideoBg;
+            video.pause();
+            video.src = '';
+            video.src = url;
+            video.muted = true;
+            video.loop = true;
+            video.playsInline = true;
+            video.onloadeddata = () => {
+                el.dynamicBg.style.opacity = 0;
+                video.style.opacity = document.body.classList.contains('light-theme') ? 1 : 0.5;
+                video.play().catch(() => {});
+                bgState.activeType = 'video';
+            };
+            video.onerror = () => {
+                el.storageErrorTip.textContent = 'Video preview failed: Unsupported format or corrupted file';
+                el.storageErrorTip.style.display = 'block';
+                tempVideoFile = null;
+                el.saveVideoBtn.style.display = 'none';
+            };
+        }
+        el.uploadVideoBtn.onclick = () => el.videoUpload.click();
+        el.videoUpload.onchange = (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            tempVideoFile = file;
+            previewVideoFile(file);
+            el.saveVideoBtn.style.display = 'inline-block';
+            el.storageSuccessTip.textContent = 'Video previewed! Click "Save" to make it persistent (survives refresh)';
+            el.storageSuccessTip.style.display = 'block';
+            el.storageErrorTip.style.display = 'none';
+        };
+        el.saveVideoBtn.onclick = async () => {
+            if (!tempVideoFile) {
+                el.storageErrorTip.textContent = 'Please select a video first!';
+                el.storageErrorTip.style.display = 'block';
+                return;
+            }
+            try {
+                const videoId = `vid-${Date.now()}-${btoa(tempVideoFile.name).slice(0, 8)}`;
+                await saveVideoToDB(videoId, tempVideoFile);
+                localStorage.setItem('savedVideoId', videoId);
+                localStorage.setItem('savedVideoName', tempVideoFile.name);
+                el.storageSuccessTip.textContent = `✅ Video saved successfully (ID: ${videoId})! Refresh to verify.`;
+                el.storageSuccessTip.style.display = 'block';
+                el.storageErrorTip.style.display = 'none';
+                el.saveVideoBtn.style.display = 'none';
+                el.defaultBgToggle.checked = false;
+            } catch (e) {
+                el.storageErrorTip.textContent = `Save failed: ${e.message}`;
+                el.storageErrorTip.style.display = 'block';
+            }
+        };
+        el.clearCacheBtn.onclick = async () => {
+            try {
+                if (currentVideoUrl) {
+                    URL.revokeObjectURL(currentVideoUrl);
+                    currentVideoUrl = null;
+                }
+                tempVideoFile = null;
+                const db = await openDB();
+                const tx = db.transaction('savedVideos', 'readwrite');
+                await tx.objectStore('savedVideos').clear();
+                localStorage.removeItem('savedVideoId');
+                localStorage.removeItem('savedVideoName');
+            } catch (e) {
+                el.storageErrorTip.textContent = `Clear cache failed: ${e.message}`;
+                el.storageErrorTip.style.display = 'block';
+            } finally {
+                el.defaultBgToggle.checked = true;
+                el.dynamicBg.style.opacity = 1;
+                el.customVideoBg.style.opacity = 0;
+                el.customBg.style.opacity = 0;
+                bgState.activeType = 'default';
+                el.saveVideoBtn.style.display = 'none';
+                el.storageSuccessTip.textContent = 'Cache cleared successfully!';
+                el.storageSuccessTip.style.display = 'block';
+                setTimeout(() => {
+                    el.storageSuccessTip.style.display = 'none';
+                    el.storageErrorTip.style.display = 'none';
+                }, 3000);
+            }
+        };
+        el.resetBgBtn.onclick = () => {
+            localStorage.removeItem('customBg');
+            localStorage.removeItem('savedVideoId');
+            localStorage.removeItem('savedVideoName');
+            if (currentVideoUrl) {
+                URL.revokeObjectURL(currentVideoUrl);
+                currentVideoUrl = null;
+            }
+            tempVideoFile = null;
+            el.dynamicBg.style.opacity = 1;
+            el.customBg.style.opacity = 0;
+            el.customVideoBg.style.opacity = 0;
+            el.customBg.src = '';
+            el.customVideoBg.src = '';
+            bgState.activeType = 'default';
+            el.defaultBgToggle.checked = true;
+            el.saveVideoBtn.style.display = 'none';
+            el.storageSuccessTip.textContent = 'Custom background reset successfully!';
+            el.storageSuccessTip.style.display = 'block';
+            setTimeout(() => {
+                el.storageSuccessTip.style.display = 'none';
+            }, 3000);
+        };
+        el.imgBgBtn.addEventListener('click', () => {
+            el.imgBgBtn.classList.add('active');
+            el.videoBgBtn.classList.remove('active');
+            el.uploadImgBtn.style.display = 'inline-block';
+            el.uploadVideoBtn.style.display = 'none';
+            el.saveVideoBtn.style.display = 'none';
+        });
+        el.videoBgBtn.addEventListener('click', () => {
+            el.videoBgBtn.classList.add('active');
+            el.imgBgBtn.classList.remove('active');
+            el.uploadVideoBtn.style.display = 'inline-block';
+            el.uploadImgBtn.style.display = 'none';
+            if (tempVideoFile) {
+                el.saveVideoBtn.style.display = 'inline-block';
+            }
+        });
+        el.uploadImgBtn.addEventListener('click', () => {
+            el.bgUpload.click();
+        });
+        el.bgUpload.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                el.customBg.src = e.target.result;
+                el.customBg.style.opacity = document.body.classList.contains('light-theme') ? 1 : 0.5;
+                el.dynamicBg.style.opacity = 0;
+                el.customVideoBg.style.opacity = 0;
+                bgState.activeType = 'image';
+                el.defaultBgToggle.checked = false;
+                localStorage.setItem('customBg', e.target.result);
+                el.storageSuccessTip.textContent = 'Image background applied successfully!';
+                el.storageSuccessTip.style.display = 'block';
+                setTimeout(() => {
+                    el.storageSuccessTip.style.display = 'none';
+                }, 3000);
+            };
+            reader.readAsDataURL(file);
+        });
+        el.defaultBgToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                el.dynamicBg.style.opacity = 1;
+                el.customBg.style.opacity = 0;
+                el.customVideoBg.style.opacity = 0;
+                bgState.activeType = 'default';
+            } else {
+                if (bgState.activeType === 'image' && el.customBg.src) {
+                    el.customBg.style.opacity = document.body.classList.contains('light-theme') ? 1 : 0.5;
+                    el.dynamicBg.style.opacity = 0;
+                } else if (bgState.activeType === 'video' && currentVideoUrl) {
+                    el.customVideoBg.style.opacity = document.body.classList.contains('light-theme') ? 1 : 0.5;
+                    el.dynamicBg.style.opacity = 0;
+                }
+            }
+        });
+        el.themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            const isLight = document.body.classList.contains('light-theme');
+            el.themeIcon.className = isLight ? 'fas fa-moon' : 'fas fa-sun';
+            localStorage.setItem('lightTheme', isLight);
+            if (bgState.activeType === 'image') {
+                el.customBg.style.opacity = isLight ? 1 : 0.5;
+            } else if (bgState.activeType === 'video') {
+                el.customVideoBg.style.opacity = isLight ? 1 : 0.5;
+            }
+            el.loaderPage.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bg');
+            el.searchLoading.style.background = getComputedStyle(document.documentElement).getPropertyValue('--surface');
+            el.searchLoading.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border');
+            el.loadingText.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text');
+        });
+        el.searchBox.addEventListener('input', (e) => {
+            const query = e.target.value.trim().toLowerCase();
+            if (!query || !el.suggestionsToggle.checked) {
+                el.suggestionsContainer.classList.remove('active');
+                return;
+            }
+            const matchedSuggestions = sampleSuggestions.filter(suggestion => 
+                suggestion.toLowerCase().includes(query)
+            ).slice(0, 10);
+            el.suggestionsBox.innerHTML = '';
+            if (matchedSuggestions.length) {
+                matchedSuggestions.forEach(suggestion => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.textContent = suggestion;
+                    item.addEventListener('click', () => {
+                        el.searchBox.value = suggestion;
+                        el.suggestionsContainer.classList.remove('active');
+                        searchWithLoading(suggestion);
+                    });
+                    el.suggestionsBox.appendChild(item);
+                });
+                el.suggestionsContainer.classList.add('active');
+            } else {
+                el.suggestionsContainer.classList.remove('active');
+            }
+        });
+        el.searchBtn.addEventListener('click', () => {
+            const query = el.searchBox.value.trim();
+            if (query) {
+                searchWithLoading(query);
+            }
+        });
+        el.searchBox.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const query = el.searchBox.value.trim();
+                if (query) {
+                    searchWithLoading(query);
+                }
+            }
+        });
+        el.uiEnhanceToggle.addEventListener('change', (e) => {
+            localStorage.setItem('uiEnhance', e.target.checked);
+            if (!e.target.checked) {
+                el.loaderPage.style.display = 'none';
+                el.mainContainer.style.opacity = 1;
+            }
+        });
+        el.safeSearchToggle.addEventListener('change', (e) => {
+            localStorage.setItem('safeSearch', e.target.checked);
+        });
+        el.searchSourceSelector.addEventListener('change', (e) => {
+            const selected = e.target.value;
+            localStorage.setItem('searchSource', selected);
+            showToast(`Switched to...${selected.charAt(0).toUpperCase() + selected.slice(1)}search！`);
+        });
+        el.settingsBtn.addEventListener('click', () => {
+            el.docsPanel.classList.remove('active');
+            el.settingsPanel.classList.toggle('active');
+            el.settingsBtn.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                el.settingsBtn.style.transform = 'scale(1)';
+            }, 200);
+        });
+        el.closeSettings.addEventListener('click', () => {
+            el.settingsPanel.classList.remove('active');
+            el.closeSettings.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                el.closeSettings.style.transform = 'scale(1)';
+            }, 200);
+        });
+        window.addEventListener('DOMContentLoaded', async () => {
+            initStartupLoader();
+            const isLight = localStorage.getItem('lightTheme') === 'true';
+            if (isLight) {
+                document.body.classList.add('light-theme');
+                el.themeIcon.className = 'fas fa-moon';
+            } else {
+                el.themeIcon.className = 'fas fa-sun';
+            }
+            const savedBg = localStorage.getItem('customBg');
+            if (savedBg) {
+                el.customBg.src = savedBg;
+                el.customBg.style.opacity = isLight ? 1 : 0.5;
+                el.dynamicBg.style.opacity = 0;
+                bgState.activeType = 'image';
+                el.defaultBgToggle.checked = false;
+            }
+            const savedVideo = await loadSavedVideo();
+            if (savedVideo) {
+                previewVideoFile(savedVideo.file);
+                el.defaultBgToggle.checked = false;
+                el.videoBgBtn.classList.add('active');
+                el.imgBgBtn.classList.remove('active');
+                el.uploadVideoBtn.style.display = 'inline-block';
+                el.uploadImgBtn.style.display = 'none';
+            }
+            const suggestionsEnabled = localStorage.getItem('suggestionsEnabled') !== 'false';
+            el.suggestionsToggle.checked = suggestionsEnabled;
+            el.suggestionsToggle.addEventListener('change', (e) => {
+                localStorage.setItem('suggestionsEnabled', e.target.checked);
+            });
+            const safeSearchEnabled = localStorage.getItem('safeSearch') === 'true';
+            el.safeSearchToggle.checked = safeSearchEnabled;
+            const savedSearchSource = localStorage.getItem('searchSource') || 'bing';
+            el.searchSourceSelector.value = savedSearchSource;
+            const uiEnhanceEnabled = localStorage.getItem('uiEnhance') !== 'false';
+            el.uiEnhanceToggle.checked = uiEnhanceEnabled;
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    const translations = {
+        en: {
+            settings: "Settings",
+            search_placeholder: "Search anything...",
+            background_type: "Background Type",
+            video: "Video",
+            image: "Image",
+            color: "Color",
+            none: "None",
+            clear_cache: "Clear Background Cache",
+            select_video: "Select Video",
+            network_monitor: "Network Monitor",
+            download: "Download",
+            upload: "Upload",
+            language: "Language",
+            lang_en: "English",
+            lang_zh: "中文",
+            lang_ru: "Русский",
+            lang_ja: "日本語",
+            lang_ko: "한국어",
+            lang_es: "Español",
+            lang_ar: "العربية",
+            lang_hi: "हिन्दी",
+            lang_fr: "Français",
+            network_monitor_title: "Network Monitor"
+        },
+        zh: {
+            settings: "设置",
+            search_placeholder: "搜索任何内容...",
+            background_type: "背景类型",
+            video: "视频",
+            image: "图片",
+            color: "颜色",
+            none: "无",
+            clear_cache: "清除背景缓存",
+            select_video: "选择视频",
+            network_monitor: "网络监测",
+            download: "下载",
+            upload: "上传",
+            language: "语言",
+            lang_en: "英文",
+            lang_zh: "中文",
+            lang_ru: "俄语",
+            lang_ja: "日语",
+            lang_ko: "韩语",
+            lang_es: "西班牙语",
+            lang_ar: "阿拉伯语",
+            lang_hi: "印地语",
+            lang_fr: "法语",
+            network_monitor_title: "网络监测"
+        },
+        ru: {
+            settings: "Настройки",
+            search_placeholder: "Искать что угодно...",
+            background_type: "Тип фона",
+            video: "Видео",
+            image: "Изображение",
+            color: "Цвет",
+            none: "Нет",
+            clear_cache: "Очистить кэш фона",
+            select_video: "Выбрать видео",
+            network_monitor: "Монитор сети",
+            download: "Загрузка",
+            upload: "Отправка",
+            language: "Язык",
+            lang_en: "Английский",
+            lang_zh: "Китайский",
+            lang_ru: "Русский",
+            lang_ja: "Японский",
+            lang_ko: "Корейский",
+            lang_es: "Испанский",
+            lang_ar: "Арабский",
+            lang_hi: "Хинди",
+            lang_fr: "Французский",
+            network_monitor_title: "Монитор сети"
+        },
+        ja: {
+            settings: "設定",
+            search_placeholder: "何でも検索...",
+            background_type: "背景タイプ",
+            video: "動画",
+            image: "画像",
+            color: "色",
+            none: "なし",
+            clear_cache: "背景キャッシュをクリア",
+            select_video: "動画を選択",
+            network_monitor: "ネットワークモニター",
+            download: "ダウンロード",
+            upload: "アップロード",
+            language: "言語",
+            lang_en: "英語",
+            lang_zh: "中国語",
+            lang_ru: "ロシア語",
+            lang_ja: "日本語",
+            lang_ko: "韓国語",
+            lang_es: "スペイン語",
+            lang_ar: "アラビア語",
+            lang_hi: "ヒンディー語",
+            lang_fr: "フランス語",
+            network_monitor_title: "ネットワークモニター"
+        },
+        ko: {
+            settings: "설정",
+            search_placeholder: "무엇이든 검색...",
+            background_type: "배경 유형",
+            video: "비디오",
+            image: "이미지",
+            color: "색상",
+            none: "없음",
+            clear_cache: "배경 캐시 지우기",
+            select_video: "비디오 선택",
+            network_monitor: "네트워크 모니터",
+            download: "다운로드",
+            upload: "업로드",
+            language: "언어",
+            lang_en: "영어",
+            lang_zh: "중국어",
+            lang_ru: "러시아어",
+            lang_ja: "일본어",
+            lang_ko: "한국어",
+            lang_es: "스페인어",
+            lang_ar: "아랍어",
+            lang_hi: "힌디어",
+            lang_fr: "프랑스어",
+            network_monitor_title: "네트워크 모니터"
+        },
+        es: {
+            settings: "Configuración",
+            search_placeholder: "Buscar cualquier cosa...",
+            background_type: "Tipo de fondo",
+            video: "Video",
+            image: "Imagen",
+            color: "Color",
+            none: "Ninguno",
+            clear_cache: "Borrar caché de fondo",
+            select_video: "Seleccionar video",
+            network_monitor: "Monitor de red",
+            download: "Descarga",
+            upload: "Subida",
+            language: "Idioma",
+            lang_en: "Inglés",
+            lang_zh: "Chino",
+            lang_ru: "Ruso",
+            lang_ja: "Japonés",
+            lang_ko: "Coreano",
+            lang_es: "Español",
+            lang_ar: "Árabe",
+            lang_hi: "Hindi",
+            lang_fr: "Francés",
+            network_monitor_title: "Monitor de red"
+        },
+        ar: {
+            settings: "الإعدادات",
+            search_placeholder: "ابحث عن أي شيء...",
+            background_type: "نوع الخلفية",
+            video: "فيديو",
+            image: "صورة",
+            color: "اللون",
+            none: "لا شيء",
+            clear_cache: "مسح ذاكرة التخزين المؤقت للخلفية",
+            select_video: "اختر فيديو",
+            network_monitor: "مراقب الشبكة",
+            download: "تنزيل",
+            upload: "رفع",
+            language: "اللغة",
+            lang_en: "الإنجليزية",
+            lang_zh: "الصينية",
+            lang_ru: "الروسية",
+            lang_ja: "اليابانية",
+            lang_ko: "الكورية",
+            lang_es: "الإسبانية",
+            lang_ar: "العربية",
+            lang_hi: "الهندية",
+            lang_fr: "الفرنسية",
+            network_monitor_title: "مراقب الشبكة"
+        },
+        hi: {
+            settings: "सेटिंग्स",
+            search_placeholder: "कुछ भी खोजें...",
+            background_type: "बैकग्राउंड प्रकार",
+            video: "वीडियो",
+            image: "इमेज",
+            color: "रंग",
+            none: "कोई नहीं",
+            clear_cache: "बैकग्राउंड कैश साफ़ करें",
+            select_video: "वीडियो चुनें",
+            network_monitor: "नेटवर्क मॉनिटर",
+            download: "डाउनलोड",
+            upload: "अपलोड",
+            language: "भाषा",
+            lang_en: "अंग्रेज़ी",
+            lang_zh: "चीनी",
+            lang_ru: "रूसी",
+            lang_ja: "जापानी",
+            lang_ko: "कोरियाई",
+            lang_es: "स्पैनिश",
+            lang_ar: "अरबी",
+            lang_hi: "हिन्दी",
+            lang_fr: "फ्रेंच",
+            network_monitor_title: "नेटवर्क मॉनिटर"
+        },
+        fr: {
+            settings: "Paramètres",
+            search_placeholder: "Rechercher n'importe quoi...",
+            background_type: "Type d'arrière-plan",
+            video: "Vidéo",
+            image: "Image",
+            color: "Couleur",
+            none: "Aucun",
+            clear_cache: "Effacer le cache de l'arrière-plan",
+            select_video: "Sélectionner une vidéo",
+            network_monitor: "Moniteur réseau",
+            download: "Téléchargement",
+            upload: "Téléversement",
+            language: "Langue",
+            lang_en: "Anglais",
+            lang_zh: "Chinois",
+            lang_ru: "Russe",
+            lang_ja: "Japonais",
+            lang_ko: "Coréen",
+            lang_es: "Espagnol",
+            lang_ar: "Arabe",
+            lang_hi: "Hindi",
+            lang_fr: "Français",
+            network_monitor_title: "Moniteur réseau"
+        }
+    };
+    
+    let currentLang = localStorage.getItem('language') || 'en';
+    
+    function updateLanguage() {
+        const t = translations[currentLang];
+        if(!t) return;
+        
+        document.querySelector('#searchInput').placeholder = t.search_placeholder;
+        document.querySelector('#settingsPanel h3').textContent = t.settings;
+        
+        const bgTitle = document.querySelector('#settingsPanel .section-title');
+        if(bgTitle) bgTitle.textContent = t.background_type;
+        
+        document.querySelector('#videoBtn').textContent = t.video;
+        document.querySelector('#imageBtn').textContent = t.image;
+        document.querySelector('#colorBtn').textContent = t.color;
+        document.querySelector('#noneBtn').textContent = t.none;
+        document.querySelector('#clearCacheBtn').textContent = t.clear_cache;
+        document.querySelector('#selectVideoBtn').textContent = t.select_video;
+        document.querySelector('#networkMonitorBtn').textContent = t.network_monitor;
+        
+        const langTitle = document.getElementById('langSectionTitle');
+        if(langTitle) langTitle.textContent = t.language;
+        
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            const lang = btn.dataset.lang;
+            btn.textContent = t['lang_' + lang];
+            if(lang === currentLang) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        
+        if(window.monitorModal) {
+            const modal = window.monitorModal;
+            if(modal.style.display !== 'none') {
+                document.querySelector('#networkMonitorTitle').textContent = t.network_monitor_title;
+                document.querySelector('#dlStat').textContent = t.download + ': 0.00 KB/s';
+                document.querySelector('#ulStat').textContent = t.upload + ': 0.00 KB/s';
+                if(window.speedChart) {
+                    window.speedChart.data.datasets[0].label = t.download;
+                    window.speedChart.data.datasets[1].label = t.upload;
+                    window.speedChart.update();
+                }
+            }
+        }
+        
+        localStorage.setItem('language', currentLang);
+    }
+    
+    window.addEventListener('load', function() {
+        const panel = document.getElementById('settingsPanel');
+        if(panel) {
+            const langSection = document.createElement('div');
+            langSection.style.marginTop = '20px';
+            
+            const langTitle = document.createElement('div');
+            langTitle.id = 'langSectionTitle';
+            langTitle.className = 'section-title';
+            langTitle.style.marginBottom = '10px';
+            langTitle.textContent = translations[currentLang].language;
+            
+            const langBtns = document.createElement('div');
+            langBtns.style.display = 'flex';
+            langBtns.style.flexWrap = 'wrap';
+            langBtns.style.gap = '8px';
+            
+            const langs = ['en', 'zh', 'ru', 'ja', 'ko', 'es', 'ar', 'hi', 'fr'];
+            langs.forEach(lang => {
+                const btn = document.createElement('button');
+                btn.className = 'bg-type-btn';
+                btn.dataset.lang = lang;
+                btn.textContent = translations[currentLang]['lang_' + lang];
+                if(lang === currentLang) {
+                    btn.classList.add('active');
+                }
+                btn.addEventListener('click', function() {
+                    currentLang = lang;
+                    updateLanguage();
+                });
+                langBtns.appendChild(btn);
+            });
+            
+            langSection.appendChild(langTitle);
+            langSection.appendChild(langBtns);
+            panel.appendChild(langSection);
+            
+            const btn = document.createElement('button');
+            btn.id = 'networkMonitorBtn';
+            btn.className = 'bg-type-btn active';
+            btn.style.marginTop = '15px';
+            btn.textContent = translations[currentLang].network_monitor;
+            panel.appendChild(btn);
+            
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            modal.style.display = 'none';
+            modal.style.zIndex = '9999';
+            modal.style.justifyContent = 'center';
+            modal.style.alignItems = 'center';
+            modal.style.backdropFilter = 'blur(5px)';
+            window.monitorModal = modal;
+            
+            const content = document.createElement('div');
+            content.style.borderRadius = '12px';
+            content.style.padding = '20px';
+            content.style.width = '850px';
+            content.style.maxWidth = '90%';
+            content.style.maxHeight = '90%';
+            content.style.position = 'relative';
+            content.style.overflow = 'hidden';
+            content.style.backdropFilter = 'blur(10px)';
+            
+            const header = document.createElement('div');
+            header.style.display = 'flex';
+            header.style.justifyContent = 'space-between';
+            header.style.alignItems = 'center';
+            header.style.marginBottom = '20px';
+            
+            const title = document.createElement('h3');
+            title.id = 'networkMonitorTitle';
+            title.textContent = translations[currentLang].network_monitor_title;
+            title.style.margin = '0';
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            closeBtn.style.background = 'none';
+            closeBtn.style.border = 'none';
+            closeBtn.style.fontSize = '20px';
+            closeBtn.style.cursor = 'pointer';
+            
+            header.appendChild(title);
+            header.appendChild(closeBtn);
+            
+            const stats = document.createElement('div');
+            stats.style.display = 'flex';
+            stats.style.gap = '40px';
+            stats.style.marginBottom = '20px';
+            
+            const dlStat = document.createElement('div');
+            dlStat.id = 'dlStat';
+            dlStat.style.padding = '10px 20px';
+            dlStat.style.borderRadius = '8px';
+            dlStat.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+            dlStat.style.fontSize = '18px';
+            dlStat.textContent = translations[currentLang].download + ': 0.00 KB/s';
+            
+            const ulStat = document.createElement('div');
+            ulStat.id = 'ulStat';
+            ulStat.style.padding = '10px 20px';
+            ulStat.style.borderRadius = '8px';
+            ulStat.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+            ulStat.style.fontSize = '18px';
+            ulStat.textContent = translations[currentLang].upload + ': 0.00 KB/s';
+            
+            stats.appendChild(dlStat);
+            stats.appendChild(ulStat);
+            
+            const canvas = document.createElement('canvas');
+            canvas.id = 'speedChart';
+            canvas.width = 800;
+            canvas.height = 450;
+            canvas.style.width = '100%';
+            canvas.style.height = '450px';
+            canvas.style.borderRadius = '8px';
+            canvas.style.padding = '15px';
+            canvas.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+            canvas.style.flexShrink = '0';
+            
+            content.appendChild(header);
+            content.appendChild(stats);
+            content.appendChild(canvas);
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            let chart;
+            window.speedChart = chart;
+            function initChart(isDark) {
+                if(chart) {
+                    chart.destroy();
+                }
+                
+                const darkBg = 'rgba(30,30,46,0.8)';
+                const lightBg = 'rgba(245,245,247,0.8)';
+                const darkContent = 'rgba(42,42,61,0.8)';
+                const lightContent = 'rgba(255,255,255,0.8)';
+                
+                content.style.backgroundColor = isDark ? darkContent : lightContent;
+                dlStat.style.backgroundColor = isDark ? darkBg : lightBg;
+                ulStat.style.backgroundColor = isDark ? darkBg : lightBg;
+                canvas.style.backgroundColor = isDark ? darkBg : lightBg;
+                title.style.color = isDark ? '#ffffff' : '#333333';
+                closeBtn.style.color = isDark ? '#ffffff' : '#333333';
+                dlStat.style.color = isDark ? '#ffffff' : '#333333';
+                ulStat.style.color = isDark ? '#ffffff' : '#333333';
+                
+                const t = translations[currentLang];
+                const ctx = canvas.getContext('2d');
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: t.download,
+                            data: [],
+                            borderColor: '#0099ff',
+                            backgroundColor: 'rgba(0,153,255,0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth:2
+                        },{
+                            label: t.upload,
+                            data: [],
+                            borderColor: '#ff3366',
+                            backgroundColor: 'rgba(255,51,102,0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth:2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                ticks: { color: isDark ? '#ffffff' : '#333333', maxTicksLimit:10 },
+                                grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }
+                            },
+                            y: {
+                                ticks: { color: isDark ? '#ffffff' : '#333333' },
+                                grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' },
+                                beginAtZero: true,
+                                min: 0
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: { color: isDark ? '#ffffff' : '#333333' }
+                            }
+                        }
+                    }
+                });
+                window.speedChart = chart;
+            }
+            
+            function updateTheme() {
+                const isDark = document.body.classList.contains('dark-theme');
+                initChart(isDark);
+            }
+            
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if(mutation.attributeName === 'class') {
+                        updateTheme();
+                    }
+                });
+            });
+            observer.observe(document.body, { attributes: true });
+            
+            updateTheme();
+            
+            async function testDownload() {
+                try {
+                    const start = Date.now();
+                    const res = await fetch('https://speed.cloudflare.com/__down?bytes=1048576', {cache:'no-store'});
+                    const blob = await res.blob();
+                    const end = Date.now();
+                    const duration = (end - start) / 1000;
+                    const speed = (blob.size / 1024) / duration;
+                    return speed;
+                } catch(e) {
+                    if(navigator.connection && navigator.connection.downlink) {
+                        return navigator.connection.downlink * 128;
+                    }
+                    return 0;
+                }
+            }
+            
+            async function testUpload() {
+                try {
+                    const start = Date.now();
+                    const data = new Blob([new Uint8Array(1024*1024)]);
+                    const res = await fetch('https://httpbin.org/post', {
+                        method: 'POST',
+                        body: data,
+                        cache:'no-store'
+                    });
+                    const end = Date.now();
+                    const duration = (end - start) / 1000;
+                    const speed = (data.size / 1024) / duration;
+                    return speed;
+                } catch(e) {
+                    return 0;
+                }
+            }
+            
+            let interval;
+            async function update() {
+                const dl = await testDownload();
+                const ul = await testUpload();
+                
+                const t = translations[currentLang];
+                dlStat.textContent = t.download + ': ' + dl.toFixed(2) + ' KB/s';
+                ulStat.textContent = t.upload + ': ' + ul.toFixed(2) + ' KB/s';
+                
+                const now = new Date().toLocaleTimeString();
+                chart.data.labels.push(now);
+                chart.data.datasets[0].data.push(dl);
+                chart.data.datasets[1].data.push(ul);
+                
+                if(chart.data.labels.length > 20) {
+                    chart.data.labels.shift();
+                    chart.data.datasets[0].data.shift();
+                    chart.data.datasets[1].data.shift();
+                }
+                
+                const allData = [...chart.data.datasets[0].data, ...chart.data.datasets[1].data];
+                const currentMax = Math.max(...allData);
+                const newMax = Math.max(currentMax * 1.2, 100);
+                
+                chart.options.scales.y.max = newMax;
+                chart.update();
+            }
+            
+            btn.addEventListener('click', function() {
+                modal.style.display = 'flex';
+                update();
+                interval = setInterval(update, 2000);
+            });
+            
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                clearInterval(interval);
+            });
+            
+            modal.addEventListener('click', function(e) {
+                if(e.target === modal) {
+                    modal.style.display = 'none';
+                    clearInterval(interval);
+                }
+            });
+            
+            updateLanguage();
+        }
+    });
+    </script>
+    </body>
+</html>
