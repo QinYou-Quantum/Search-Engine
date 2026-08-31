@@ -1,0 +1,2632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizon Search Engine-Fix</title>
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🐾%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+
+
+
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            font-weight: 400;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            line-height: 1.5;
+        }
+        :root {
+            --primary: #165DFF;
+            --bg: #141414;
+            --surface: #1F1F1F;
+            --text: #F7F8FA;
+            --text-secondary: #86909C;
+            --border: #303030;
+            --shadow: 0 1px 6px rgba(0,0,0,0.5);
+            --bg-opacity: 0.5;
+            --default-bg-color: #0F172A;
+            --logo-main: #4080FF;
+            --logo-sub: #F7F8FA;
+            --surface-rgb: 31, 31, 31;
+            --bg-rgb: 20, 20, 20;
+        }
+        .light-theme {
+            --primary: #165DFF;
+            --bg: #ffffff;
+            --surface: #ffffff;
+            --text: #1D2129;
+            --text-secondary: #4E5969;
+            --border: #E5E6EB;
+            --shadow: 0 1px 6px rgba(169,172,175,0.28);
+            --bg-opacity: 1;
+            --default-bg-color: #F5F7FA;
+            --logo-main: #165DFF;
+            --logo-sub: #1D2129;
+            --surface-rgb: 255, 255, 255;
+            --bg-rgb: 255, 255, 255;
+        }
+        .loader-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: var(--bg);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            will-change: opacity, display;
+        }
+        .loader-logo {
+            font-size: 4rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+        }
+        .loader-logo .furry {
+            color: var(--primary);
+        }
+        .loader-logo .search-engine {
+            color: var(--logo-sub);
+        }
+        .loader-progress {
+            width: 80%;
+            max-width: 400px;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .loader-progress-bar {
+            width: 0;
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            transition: width 3s linear;
+        }
+        .search-loading-mask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.2);
+            z-index: 9998;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .search-loading-mask.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .search-loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8) translateZ(0);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow);
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        .search-loading.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1) translateZ(0);
+            pointer-events: auto;
+        }
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            transform: translateZ(0);
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--text);
+        }
+        .bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .dynamic-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--default-bg-color);
+            opacity: var(--bg-opacity);
+            transition: opacity 1s ease;
+            z-index: -2;
+        }
+        .custom-bg, .custom-video-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease;
+            z-index: -1;
+        }
+        .custom-bg.active, .custom-video-bg.active {
+            opacity: var(--bg-opacity);
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+        }
+        .logo {
+            font-size: 3.5rem;
+            font-weight: 400;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out;
+            letter-spacing: -0.02em;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+        }
+        .logo .furry { color: var(--logo-main); }
+        .logo .search-engine { color: var(--logo-sub); }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .search-group {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            margin-bottom: 30px;
+            animation: fadeInUp 0.8s ease-out 0.2s forwards;
+            opacity: 0;
+            z-index: 200;
+        }
+        .search-box {
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 400;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+        }
+        .search-box:focus {
+            box-shadow: 0 1px 12px rgba(22,93,255,0.25);
+            border-color: var(--primary);
+        }
+        .search-btn {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .search-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22,93,255,0.3);
+        }
+        .suggestions-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 20px auto;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1), margin-bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+            opacity: 0;
+            z-index: 150;
+        }
+        .suggestions-container.active {
+            max-height: 300px;
+            margin-bottom: 20px;
+            opacity: 1;
+        }
+        .suggestions {
+            width: 100%;
+            background: var(--surface);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 8px 0;
+            transform-origin: top center;
+            transform: scaleY(0.95);
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease;
+        }
+        .suggestions-container.active .suggestions {
+            transform: scaleY(1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .suggestion-item {
+            padding: 12px 24px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            transform: translateX(-10px);
+            opacity: 0;
+            animation: slideIn 0.15s ease forwards;
+        }
+        .suggestion-item:nth-child(1) { animation-delay: 0.03s; }
+        .suggestion-item:nth-child(2) { animation-delay: 0.06s; }
+        .suggestion-item:nth-child(3) { animation-delay: 0.09s; }
+        .suggestion-item:nth-child(4) { animation-delay: 0.12s; }
+        .suggestion-item:nth-child(5) { animation-delay: 0.15s; }
+        .suggestion-item:nth-child(6) { animation-delay: 0.18s; }
+        .suggestion-item:nth-child(7) { animation-delay: 0.21s; }
+        .suggestion-item:nth-child(8) { animation-delay: 0.24s; }
+        .suggestion-item:nth-child(9) { animation-delay: 0.27s; }
+        .suggestion-item:nth-child(10) { animation-delay: 0.30s; }
+        @keyframes slideIn {
+            from { transform: translateX(-10px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .suggestion-item:hover {
+            background: rgba(22,93,255,0.05);
+            border-radius: 12px;
+            margin: 0 8px;
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(22,93,255,0.1);
+        }
+        .light-theme .suggestion-item:hover {
+            background: rgba(64,128,255,0.08);
+            box-shadow: 0 2px 8px rgba(64,128,255,0.1);
+        }
+        .suggestions::-webkit-scrollbar { width: 6px; }
+        .suggestions::-webkit-scrollbar-track { background: transparent; border-radius: 10px; }
+        .suggestions::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; transition: background 0.2s ease; }
+        .suggestions::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+        .quick-links {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out 0.4s forwards;
+            opacity: 0;
+            position: relative;
+            z-index: 100;
+            background: var(--surface);
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .quick-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 400;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .quick-link:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 400;
+            animation: fadeInUp 0.8s ease-out 0.6s forwards;
+            opacity: 0;
+        }
+        .action-btn {
+            position: fixed;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 400;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            pointer-events: auto;
+        }
+        .action-btn:hover { transform: scale(1.1); box-shadow: var(--shadow); }
+        .theme-toggle { top: 20px; left: 20px; }
+        .settings-btn { top: 20px; right: 20px; }
+        .docs-btn { top: 80px; right: 20px; }
+        .settings-panel, .docs-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 380px;
+            height: 100%;
+            background: var(--surface);
+            box-shadow: -2px 0 20px rgba(0,0,0,0.2);
+            z-index: 1001;
+            padding: 30px;
+            transition: right 0.5s cubic-bezier(0.34,1.56,0.64,1);
+            overflow-y: auto;
+        }
+        .docs-panel { z-index: 1002; }
+        .settings-panel::-webkit-scrollbar, .docs-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        .settings-panel::-webkit-scrollbar-track, .docs-panel::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 10px;
+        }
+        .settings-panel::-webkit-scrollbar-thumb, .docs-panel::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+            transition: background 0.2s ease;
+        }
+        .settings-panel::-webkit-scrollbar-thumb:hover, .docs-panel::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+        .settings-panel.active, .docs-panel.active { right: 0; }
+        .docs-content {
+            white-space: pre-line !important;
+            padding: 10px 0 !important;
+            font-size: 14px !important;
+            line-height: 1.8 !important;
+            color: var(--text) !important;
+            word-wrap: break-word !important;
+            word-break: normal !important;
+        }
+        .docs-content p { margin-bottom: 16px !important; }
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        .settings-title { font-size: 24px; font-weight: 500; }
+        .close-settings {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .close-settings:hover { transform: scale(1.2); }
+        .setting-item {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .setting-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .setting-title i.fa-magic { color: var(--primary); }
+        .toggle-switch { position: relative; display: inline-block; width: 52px; height: 26px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .toggle-slider:before {
+            position: absolute; content: "";
+            height: 18px; width: 18px; left: 4px; bottom: 4px;
+            background: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .toggle-slider { background: var(--primary); }
+        input:checked + .toggle-slider:before { transform: translateX(26px); }
+        .upload-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+        .upload-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22,93,255,0.3);
+        }
+        .save-video-btn { background: #52c41a !important; }
+        .save-video-btn:hover { box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3) !important; }
+        .clear-cache-btn { background: #86909C; margin-top: 10px; }
+        .clear-cache-btn:hover { background: #ff4d4f; box-shadow: 0 4px 12px rgba(255,77,79,0.3); }
+        .reset-bg-btn { background: #fa8c16 !important; margin-top: 10px; }
+        .reset-bg-btn:hover { box-shadow: 0 4px 12px rgba(250,140,22,0.3) !important; }
+        #bgUpload, #videoUpload { display: none; }
+        .bg-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .bg-type-btn {
+            padding: 8px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 14px;
+            font-weight: 400;
+        }
+        .bg-type-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .search-source-selector {
+            width: 100%;
+            padding: 10px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .search-source-selector:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(22,93,255,0.1);
+        }
+        .tip-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        .error-tip { color: #ff4d4f; font-size: 12px; margin-top: 8px; }
+        .success-tip { color: #52c41a; font-size: 12px; margin-top: 8px; }
+        .toast-notice {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 24px;
+            color: var(--text);
+            font-size: 14px;
+            box-shadow: var(--shadow);
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .toast-notice.active {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        @media (max-width: 768px) {
+            .loader-logo { font-size: 2.5rem; }
+            .loader-progress { width: 90%; }
+            .logo { font-size: 2.5rem; flex-direction: column; text-align: center; gap: 4px; }
+            .settings-panel, .docs-panel { width: 100%; right: -100%; z-index: 1001; }
+            .quick-links { flex-direction: column; align-items: center; }
+            .bg-type-selector { flex-direction: column; }
+            .upload-btn { margin-right: 0; margin-bottom: 10px; width: 100%; }
+            .clear-cache-btn, .reset-bg-btn { width: 100%; margin-right: 0; }
+            .suggestions-container { width: 90%; }
+            .action-btn { width: 44px; height: 44px; font-size: 18px; }
+            .docs-btn { top: 70px; }
+            .toast-notice { width: 90%; text-align: center; }
+            .search-loading { padding: 16px 24px; }
+            .loading-spinner { width: 20px; height: 20px; }
+        }
+
+        .light-theme .search-source-selector,
+        .light-theme #languageSelector {
+            background: #ffffff;
+            border-color: #d0d0d5;
+            color: #1D2129;
+        }
+        .light-theme .search-source-selector:focus,
+        .light-theme #languageSelector:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(22,93,255,0.1);
+        }
+        .light-theme .settings-panel .bg-type-btn {
+            background: #f5f5f7;
+            border-color: #d0d0d5;
+            color: #1D2129;
+        }
+        .light-theme .settings-panel .bg-type-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .light-theme .settings-panel .toggle-slider {
+            background: #b0b0b8;
+        }
+        .light-theme .settings-panel .toggle-slider:before {
+            background: white;
+        }
+        .light-theme .settings-panel input:checked + .toggle-slider {
+            background: var(--primary);
+        }
+        .light-theme .settings-panel .setting-item {
+            border-bottom-color: #e5e6eb;
+        }
+        .light-theme .settings-panel .settings-header {
+            border-bottom-color: #e5e6eb;
+        }
+        .light-theme .settings-panel {
+            background: #ffffff;
+            color: #1D2129;
+        }
+        .light-theme .settings-panel .settings-title,
+        .light-theme .settings-panel .setting-title {
+            color: #1D2129;
+        }
+        .light-theme .settings-panel .close-settings {
+            color: #1D2129;
+        }
+
+        #debugPanel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 600px;
+            max-height: 500px;
+            background: rgba(20, 20, 30, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+            z-index: 99999;
+            display: none;
+            flex-direction: column;
+            font-size: 13px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            color: #e0e0e0;
+            transition: opacity 0.3s;
+            pointer-events: auto;
+            resize: both;
+            overflow: hidden;
+            min-width: 400px;
+            min-height: 300px;
+        }
+        #debugPanel.active { display: flex; }
+        #debugPanel .debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 14px;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        #debugPanel .debug-header .debug-title {
+            font-weight: 600;
+            color: #88ccff;
+            font-size: 14px;
+        }
+        #debugPanel .debug-header .debug-actions button {
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            margin-left: 6px;
+            font-size: 13px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+        #debugPanel .debug-header .debug-actions button:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        #debugPanel .debug-tabs {
+            display: flex;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            padding: 0 8px;
+            gap: 2px;
+        }
+        #debugPanel .debug-tabs .tab-btn {
+            padding: 5px 14px;
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: inherit;
+            transition: 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+        #debugPanel .debug-tabs .tab-btn:hover { color: #fff; }
+        #debugPanel .debug-tabs .tab-btn.active {
+            color: #88ccff;
+            border-bottom-color: #88ccff;
+        }
+        #debugPanel .debug-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 6px 12px;
+            line-height: 1.5;
+            max-height: 380px;
+            min-height: 120px;
+        }
+        #debugPanel .debug-body::-webkit-scrollbar { width: 4px; }
+        #debugPanel .debug-body::-webkit-scrollbar-track { background: transparent; }
+        #debugPanel .debug-body::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        #debugPanel .log-entry {
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            padding: 2px 0;
+            word-break: break-all;
+            white-space: pre-wrap;
+            font-size: 12px;
+        }
+        #debugPanel .log-entry .log-time { color: #888; margin-right: 8px; }
+        #debugPanel .log-entry .log-ok { color: #6f6; }
+        #debugPanel .log-entry .log-error { color: #f66; }
+        #debugPanel .log-entry .log-info { color: #8cf; }
+        #debugPanel .log-entry .log-warn { color: #fc6; }
+
+        #debugPanel .network-entry {
+            display: grid;
+            grid-template-columns: 55px 70px 55px 70px 1fr;
+            gap: 4px 6px;
+            font-size: 11px;
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        #debugPanel .network-entry .method { color: #ffb86b; }
+        #debugPanel .network-entry .status { font-weight: bold; }
+        #debugPanel .network-entry .status.ok { color: #6f6; }
+        #debugPanel .network-entry .status.error { color: #f66; }
+        #debugPanel .network-entry .time { color: #aaa; }
+        #debugPanel .network-entry .size { color: #aaa; }
+        #debugPanel .network-entry .url { color: #8cf; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        #debugPanel .perf-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 16px;
+            font-size: 12px;
+            padding: 4px 0 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        #debugPanel .perf-stats .stat-item { display: flex; align-items: center; gap: 4px; }
+        #debugPanel .perf-stats .stat-label { color: #aaa; }
+        #debugPanel .perf-stats .stat-value { font-weight: bold; color: #6f6; }
+        #debugPanel .perf-chart-container {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            margin: 6px 0;
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        #debugPanel .perf-chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+        #debugPanel .sys-entry {
+            font-size: 12px;
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .light-theme #debugPanel {
+            background: rgba(240, 240, 245, 0.96);
+            color: #222;
+            border-color: #ccc;
+        }
+        .light-theme #debugPanel .debug-header { background: rgba(0,0,0,0.05); }
+        .light-theme #debugPanel .debug-title { color: #0066cc; }
+        .light-theme #debugPanel .debug-tabs { background: rgba(0,0,0,0.03); }
+        .light-theme #debugPanel .debug-tabs .tab-btn.active { color: #0066cc; border-bottom-color: #0066cc; }
+        .light-theme #debugPanel .debug-tabs .tab-btn:hover { color: #333; }
+        .light-theme #debugPanel .log-entry { border-bottom-color: rgba(0,0,0,0.05); }
+        .light-theme #debugPanel .network-entry { border-bottom-color: rgba(0,0,0,0.05); }
+        .light-theme #debugPanel .perf-stats { border-bottom-color: rgba(0,0,0,0.05); }
+        .light-theme #debugPanel .sys-entry { border-bottom-color: rgba(0,0,0,0.05); }
+        .light-theme #debugPanel .log-entry .log-time { color: #666; }
+        .light-theme #debugPanel .log-entry .log-ok { color: #2a7a2a; }
+        .light-theme #debugPanel .log-entry .log-error { color: #cc3333; }
+        .light-theme #debugPanel .log-entry .log-info { color: #0066cc; }
+        .light-theme #debugPanel .log-entry .log-warn { color: #b8860b; }
+        .light-theme #debugPanel .network-entry .method { color: #b8860b; }
+        .light-theme #debugPanel .network-entry .url { color: #0066cc; }
+        .light-theme #debugPanel .perf-stats .stat-value { color: #2a7a2a; }
+        .light-theme #debugPanel .perf-chart-container { background: rgba(0,0,0,0.05); }
+        @media (max-width: 700px) {
+            #debugPanel { width: calc(100% - 20px); right: 10px; bottom: 10px; max-height: 400px; min-width: unset; }
+            #debugPanel .network-entry {
+                grid-template-columns: 45px 55px 45px 55px 1fr;
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader-page" id="loaderPage">
+        <div class="loader-logo">
+            <span class="furry">Horizon</span>
+            <span class="search-engine">Search Engine</span>
+        </div>
+        <div class="loader-progress">
+            <div class="loader-progress-bar" id="loaderProgressBar"></div>
+        </div>
+    </div>
+    <div class="search-loading-mask" id="searchLoadingMask"></div>
+    <div class="search-loading" id="searchLoading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" data-i18n="loadingText">Searching...</div>
+    </div>
+    <div class="bg-container">
+        <div class="dynamic-bg" id="dynamicBg"></div>
+        <img class="custom-bg" id="customBg" alt="Custom Background">
+        <video class="custom-video-bg" id="customVideoBg" autoplay loop muted playsinline></video>
+    </div>
+    <div class="toast-notice" id="toastNotice">Switched search source successfully！</div>
+
+    <!-- ====== 嘿！你看到这行注释啦！但是什么也没有！awa ====== -->
+    <button class="action-btn theme-toggle" id="themeToggle">
+        <i class="fas fa-sun" id="themeIcon"></i>
+    </button>
+    <button class="action-btn settings-btn" id="settingsBtn">
+        <i class="fas fa-cog"></i>
+    </button>
+    <button class="action-btn docs-btn" id="docsBtn">
+        <i class="fas fa-book"></i>
+    </button>
+    <div class="container" id="mainContainer">
+        <h1 class="logo">
+            <span class="furry">Horizon</span>
+            <span class="search-engine">Search Engine</span>
+        </h1>
+        <div class="search-group" id="searchGroup">
+            <input type="text" class="search-box" id="searchBox" data-i18n-ph="searchPlaceholder" placeholder="Search the web..." autocomplete="off">
+            <button class="search-btn" id="searchBtn">
+                <i class="fas fa-search"></i> <span data-i18n="searchBtn">Search</span>
+            </button>
+        </div>
+        <div class="suggestions-container" id="suggestionsContainer">
+            <div class="suggestions" id="suggestionsBox"></div>
+        </div>
+        <div class="quick-links">
+            <a href="https://github.com" target="_blank" class="quick-link"><i class="fab fa-github"></i> Github</a>
+            <a href="https://douyin.com" target="_blank" class="quick-link"><i class="fab fa-tiktok"></i> Tiktok</a>
+            <a href="https://youtube.com" target="_blank" class="quick-link"><i class="fab fa-youtube"></i>Youtube</a>
+            <a href="https://facebook.com" target="_blank" class="quick-link"><i class="fab fa-facebook"></i>Facebook</a>
+            <a href="https://www.sotwe.com" target="_blank" class="quick-link"><i class="fab fa-twitter"></i>Twitter</a>
+            <a href="https://bilibili.com" target="_blank" class="quick-link"><i class="fab fa-bilibili"></i>Bilibili</a>
+            <a href="https://microsoft.com" target="_blank" class="quick-link"><i class="fab fa-microsoft"></i>Microsoft</a>
+            <a href="https://github.com/pricing" target="_blank" class="quick-link"><i class="fas fa-paw"></i>赞助我awa</a>
+            <a href="https://minecraft.com" target="_blank" class="quick-link"><i class="fas fa-gamepad"></i>Minecraft</a>
+            <a href="https://www.curseforge.com/minecraft" target="_blank" class="quick-link"><i class="fas fa-book"></i>Curseforge</a>
+            <a href="https://hi-furry.cn" target="_blank" class="quick-link"><i class="fas fa-paw"></i>Hi-Furry</a>
+        </div>
+        <div class="footer" data-i18n="footer">
+            &copy; 2026 Qin_Xiaoyou Lightweight Search Engine
+        </div>
+    </div>
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h2 class="settings-title"><i class="fas fa-sliders-h"></i> <span data-i18n="settingsTitle">Settings</span></h2>
+            <button class="close-settings" id="closeSettings"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-image"></i> <span data-i18n="bgTitle">Custom Background</span></div>
+            <p data-i18n="bgDesc" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                Upload a custom image or video to replace the default background.
+            </p>
+            <div class="bg-type-selector">
+                <button class="bg-type-btn active" id="imgBgBtn" data-i18n="imgBgBtn">Image Background</button>
+                <button class="bg-type-btn" id="videoBgBtn" data-i18n="videoBgBtn">Video Background</button>
+            </div>
+            <input type="file" id="bgUpload" accept="image/*">
+            <input type="file" id="videoUpload" accept="video/mp4,video/webm,video/ogg">
+            <button class="upload-btn" id="uploadImgBtn" data-i18n="uploadImgBtn">Upload Image</button>
+            <button class="upload-btn" id="uploadVideoBtn" data-i18n="uploadVideoBtn" style="display: none;">Select Video</button>
+            <button class="upload-btn save-video-btn" id="saveVideoBtn" data-i18n="saveVideoBtn" style="display: none;">💾 Save Video Background</button>
+            <button class="upload-btn clear-cache-btn" id="clearCacheBtn" data-i18n="clearCacheBtn">Clear Background Cache</button>
+            <button class="upload-btn reset-bg-btn" id="resetBgBtn" data-i18n="resetBgBtn">🔄 Reset Custom Background</button>
+            <div class="tip-text" data-i18n="bgTip">Tips: Video files are stored locally as original binary (support 4K resolution).</div>
+            <div id="storageErrorTip" class="error-tip" style="display: none;"></div>
+            <div id="storageSuccessTip" class="success-tip" style="display: none;"></div>
+            <div style="margin-top: 15px; display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 14px;" data-i18n="useDefaultBg">Use default background</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="defaultBgToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-lightbulb"></i> <span data-i18n="suggestTitle">Search Suggestions</span></div>
+            <p data-i18n="suggestDesc" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                Show relevant search suggestions as you type.
+            </p>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 14px;" data-i18n="enableSuggest">Enable suggestions</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="suggestionsToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-shield-halved"></i> <span data-i18n="safeTitle">Safe Search</span></div>
+            <p data-i18n="safeDesc" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                Disable Cookie collection when searching for better privacy protection.
+            </p>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 14px;" data-i18n="enableSafe">Enable Safe Search</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="safeSearchToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-search"></i> <span data-i18n="sourceTitle">Search Source</span></div>
+            <p data-i18n="sourceDesc" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                Customize the default search engine for your queries.
+            </p>
+            <select class="search-source-selector" id="searchSourceSelector">
+                <option value="bing">Bing</option>
+                <option value="google">Google</option>
+                <option value="baidu">Baidu</option>
+            </select>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-language"></i> <span data-i18n="langTitle">Language / 语言</span></div>
+            <p data-i18n="langDesc" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                Switch the global interface language instantly.
+            </p>
+            <select class="search-source-selector" id="languageSelector">
+                <option value="en">English</option>
+                <option value="zh">简体中文 · Chinese</option>
+                <option value="ja">日本語 · Japanese</option>
+                <option value="ru">Русский · Russian</option>
+                <option value="fr">Français · French</option>
+                <option value="es">Español · Spanish</option>
+            </select>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-magic"></i> <span data-i18n="uiTitle">Enhanced UI Interaction</span></div>
+            <p data-i18n="uiDesc" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                Enable startup loading animation and search loading effect for better experience.
+            </p>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 14px;" data-i18n="enableUi">Enable UI Enhancement</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="uiEnhanceToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="setting-title"><i class="fas fa-bug"></i> <span data-i18n="debugTitle">Debug Mode</span></div>
+            <p data-i18n="debugDesc" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">
+                Enable advanced debug panel with FPS monitor, network capture and action tracking.
+            </p>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span style="font-size: 14px;" data-i18n="debugEnable">Enable Debug Panel</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="debugToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div style="margin-top: 12px;">
+                <span style="font-size: 13px; color: var(--text-secondary);" data-i18n="debugLevel">Log Level</span>
+                <select id="debugLevelSelect" style="margin-left: 10px; padding: 4px 10px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 4px;">
+                    <option value="brief" data-i18n="debugBrief">Brief</option>
+                    <option value="detailed" data-i18n="debugDetailed" selected>Detailed</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="docs-panel" id="docsPanel" style="z-index: 1002;">
+        <div class="settings-header">
+            <h2 class="settings-title"><i class="fas fa-book"></i> MIT License</h2>
+            <button class="close-settings" id="closeDocs"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="docs-content">
+            <p>MIT License</p>
+            <p>Copyright © 2026 Qin_Xiaoyou</p>
+            <p>Logo:Furry Search Engine®</p>
+            <p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files the "Software limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+            <p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+            <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+            <p>本搜索引擎的设计初衷是独立给各位福瑞文化爱好者和各位毛毛们所使用，但后期设计和修复都涉及商业利益关系，这次我们将一视同仁，向全网公开我们（骗你的，开发者只有一个）的搜索引擎，欢迎致电至开发者，我们希望可以取得更多的用户反馈！<p>
+                    <p>海内外同平台https://github.com/qinyou-quantum<p>
+                        <p>邮箱反馈：<p>
+                            <p>海外qinxiaoyou79@gmail.com<p>
+                            <p>大陆3815308964@qq.com<p>
+            <p>这一次重做了整个引擎的框架，也是继2.5版本后的全框架和构架重制，增加了原生DeBug响应反馈调试（但不可操作），2.5后的重制版项目将命名为“Furry（Horizon）SearchEngine-Fix v1.0”</p>
+            <p>对了！挂个人！生产日期：440981200812220611杨习豪（注意避雷）</p>
+        </div>
+    </div>
+
+    <!-- ====== 这下面就是DeBug调试面板啦，会的可以自己添加点功能上去......比如...云南蘑菇？？？（这是个彩蛋） ====== -->
+    <div id="debugPanel">
+        <div class="debug-header">
+            <span class="debug-title"><i class="fas fa-bug"></i> <span data-i18n="debugTitle">Debug Panel</span></span>
+            <div class="debug-actions">
+                <button id="debugExportBtn" title="Export logs"><i class="fas fa-download"></i></button>
+                <button id="debugClearBtn" title="Clear logs"><i class="fas fa-trash-alt"></i></button>
+                <button id="debugCloseBtn" title="Close panel"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="debug-tabs">
+            <button class="tab-btn active" data-tab="logs"><i class="fas fa-list-ul"></i> <span data-i18n="debugLogsTab">Logs</span></button>
+            <button class="tab-btn" data-tab="network"><i class="fas fa-network-wired"></i> <span data-i18n="debugNetworkTab">Network</span></button>
+            <button class="tab-btn" data-tab="performance"><i class="fas fa-chart-line"></i> <span data-i18n="debugPerfTab">Performance</span></button>
+            <button class="tab-btn" data-tab="system"><i class="fas fa-desktop"></i> <span data-i18n="debugSystemTab">System</span></button>
+        </div>
+        <div class="debug-body" id="debugBody">
+        </div>
+    </div>
+
+    <script>
+        const I18N = {
+            en: {
+                searchPlaceholder: "Search the web...", searchBtn: "Search", loadingText: "Searching...",
+                footer: "© 2026 Qin_Xiaoyou Lightweight Search Engine", settingsTitle: "Settings",
+                bgTitle: "Custom Background", bgDesc: "Upload a custom image or video to replace the default background.",
+                imgBgBtn: "Image Background", videoBgBtn: "Video Background", uploadImgBtn: "Upload Image",
+                uploadVideoBtn: "Select Video", saveVideoBtn: "💾 Save Video Background",
+                clearCacheBtn: "Clear Background Cache", resetBgBtn: "🔄 Reset Custom Background",
+                bgTip: "Tips: Video files are stored locally as original binary (support 4K resolution).",
+                useDefaultBg: "Use default background", suggestTitle: "Search Suggestions",
+                suggestDesc: "Show relevant search suggestions as you type.", enableSuggest: "Enable suggestions",
+                safeTitle: "Safe Search", safeDesc: "Disable Cookie collection when searching for better privacy protection.",
+                enableSafe: "Enable Safe Search", sourceTitle: "Search Source",
+                sourceDesc: "Customize the default search engine for your queries.",
+                langTitle: "Language / 语言", langDesc: "Switch the global interface language instantly.",
+                uiTitle: "Enhanced UI Interaction", uiDesc: "Enable startup loading animation and search loading effect for better experience.",
+                enableUi: "Enable UI Enhancement", networkMonitor: "Network Monitor", download: "Download",
+                upload: "Upload", langSwitched: "Language switched successfully!",
+                debugTitle: "Debug Panel",
+                debugDesc: "Enable advanced debug panel with FPS monitor, network capture and action tracking.",
+                debugEnable: "Enable Debug Panel",
+                debugLevel: "Log Level",
+                debugBrief: "Brief",
+                debugDetailed: "Detailed",
+                debugLogsTab: "Logs",
+                debugNetworkTab: "Network",
+                debugPerfTab: "Performance",
+                debugSystemTab: "System",
+                debugClearLogs: "Clear Logs",
+                debugExportLogs: "Export Logs",
+                debugRequestUrl: "URL",
+                debugRequestMethod: "Method",
+                debugRequestStatus: "Status",
+                debugRequestTime: "Time",
+                debugRequestSize: "Size",
+                debugPerfFps: "FPS",
+                debugPerfFrameTime: "Frame Time",
+                debugPerfActions: "Actions",
+                debugPerfLogs: "Logs",
+                debugSysBrowser: "Browser",
+                debugSysScreen: "Screen",
+                debugSysNetwork: "Network",
+                debugSysUptime: "Uptime",
+            },
+            zh: {
+                searchPlaceholder: "搜索网页……", searchBtn: "搜索", loadingText: "搜索中……",
+                footer: "© 2026 Qin_Xiaoyou 轻量搜索引擎", settingsTitle: "设置",
+                bgTitle: "自定义背景（请不要上传违规内容，如R18，R18G等...）", bgDesc: "上传自定义图片或视频以替换默认背景。",
+                imgBgBtn: "图片背景", videoBgBtn: "视频背景", uploadImgBtn: "上传图片",
+                uploadVideoBtn: "选择视频", saveVideoBtn: "💾 保存视频背景",
+                clearCacheBtn: "清除背景缓存", resetBgBtn: "🔄 重置自定义背景",
+                bgTip: "提示：视频文件以原始二进制格式存储在本地（支持 4K 分辨率）。",
+                useDefaultBg: "使用默认背景", suggestTitle: "搜索建议",
+                suggestDesc: "输入时显示相关的搜索建议。", enableSuggest: "启用搜索建议",
+                safeTitle: "安全搜索", safeDesc: "搜索时禁用 Cookie 收集，更好地保护隐私。",
+                enableSafe: "启用安全搜索（不是无痕）", sourceTitle: "搜索源",
+                sourceDesc: "自定义查询时使用的默认搜索引擎。",
+                langTitle: "语言 / Language", langDesc: "即时切换全局界面语言。",
+                uiTitle: "增强界面交互（花里胡哨的界面）", uiDesc: "启用启动加载动画与搜索加载特效，获得更佳体验。",
+                enableUi: "启用界面增强", networkMonitor: "网络监控", download: "下载",
+                upload: "上传", langSwitched: "语言切换成功！",
+                debugTitle: "调试面板（只有开发者感兴趣）",
+                debugDesc: "启用高级调试面板，包含 FPS 监控、网络抓包和操作追踪。",
+                debugEnable: "启用调试面板",
+                debugLevel: "日志级别",
+                debugBrief: "简洁",
+                debugDetailed: "详细",
+                debugLogsTab: "日志",
+                debugNetworkTab: "网络",
+                debugPerfTab: "性能",
+                debugSystemTab: "系统",
+                debugClearLogs: "清空日志",
+                debugExportLogs: "导出日志",
+                debugRequestUrl: "URL",
+                debugRequestMethod: "方法",
+                debugRequestStatus: "状态",
+                debugRequestTime: "耗时",
+                debugRequestSize: "大小",
+                debugPerfFps: "帧率",
+                debugPerfFrameTime: "帧时间",
+                debugPerfActions: "操作数",
+                debugPerfLogs: "日志数",
+                debugSysBrowser: "浏览器",
+                debugSysScreen: "屏幕",
+                debugSysNetwork: "网络",
+                debugSysUptime: "运行时间",
+            },
+            ja: {
+                searchPlaceholder: "ウェブを検索...", searchBtn: "検索", loadingText: "検索中...",
+                footer: "© 2026 Qin_Xiaoyou 軽量検索エンジン", settingsTitle: "設定",
+                bgTitle: "カスタム背景", bgDesc: "デフォルトの背景を置き換えるカスタム画像または動画をアップロードします。",
+                imgBgBtn: "画像背景", videoBgBtn: "動画背景", uploadImgBtn: "画像をアップロード",
+                uploadVideoBtn: "動画を選択", saveVideoBtn: "💾 動画背景を保存",
+                clearCacheBtn: "背景キャッシュを消去", resetBgBtn: "🔄 カスタム背景をリセット",
+                bgTip: "ヒント：動画ファイルは元のバイナリ形式でローカルに保存されます（4K解像度対応）。",
+                useDefaultBg: "デフォルト背景を使用", suggestTitle: "検索候補",
+                suggestDesc: "入力時に関連する検索候補を表示します。", enableSuggest: "検索候補を有効にする",
+                safeTitle: "セーフサーチ", safeDesc: "検索時のCookie収集を無効にし、プライバシーを保護します。",
+                enableSafe: "セーフサーチを有効にする", sourceTitle: "検索エンジン",
+                sourceDesc: "クエリのデフォルト検索エンジンをカスタマイズします。",
+                langTitle: "言語 / Language", langDesc: "グローバルインターフェースの言語を即座に切り替えます。",
+                uiTitle: "UIインタラクション強化", uiDesc: "起動時のローディングアニメーションと検索エフェクトを有効にします。",
+                enableUi: "UI強化を有効にする", networkMonitor: "ネットワークモニター", download: "ダウンロード",
+                upload: "アップロード", langSwitched: "言語が正常に切り替わりました！",
+                debugTitle: "デバッグパネル",
+                debugDesc: "FPSモニター、ネットワークキャプチャ、操作追跡を含む高度なデバッグパネルを有効にします。",
+                debugEnable: "デバッグパネルを有効にする",
+                debugLevel: "ログレベル",
+                debugBrief: "簡潔",
+                debugDetailed: "詳細",
+                debugLogsTab: "ログ",
+                debugNetworkTab: "ネットワーク",
+                debugPerfTab: "パフォーマンス",
+                debugSystemTab: "システム",
+                debugClearLogs: "ログをクリア",
+                debugExportLogs: "ログをエクスポート",
+                debugRequestUrl: "URL",
+                debugRequestMethod: "メソッド",
+                debugRequestStatus: "ステータス",
+                debugRequestTime: "時間",
+                debugRequestSize: "サイズ",
+                debugPerfFps: "FPS",
+                debugPerfFrameTime: "フレーム時間",
+                debugPerfActions: "アクション数",
+                debugPerfLogs: "ログ数",
+                debugSysBrowser: "ブラウザ",
+                debugSysScreen: "画面",
+                debugSysNetwork: "ネットワーク",
+                debugSysUptime: "稼働時間",
+            },
+            ru: {
+                searchPlaceholder: "Поиск в интернете...", searchBtn: "Поиск", loadingText: "Поиск...",
+                footer: "© 2026 Qin_Xiaoyou Лёгкая поисковая система", settingsTitle: "Настройки",
+                bgTitle: "Пользовательский фон", bgDesc: "Загрузите своё изображение или видео, чтобы заменить фон по умолчанию.",
+                imgBgBtn: "Фон-изображение", videoBgBtn: "Фон-видео", uploadImgBtn: "Загрузить изображение",
+                uploadVideoBtn: "Выбрать видео", saveVideoBtn: "💾 Сохранить видеофон",
+                clearCacheBtn: "Очистить кэш фона", resetBgBtn: "🔄 Сбросить фон",
+                bgTip: "Совет: видеофайлы хранятся локально в исходном двоичном формате (поддержка 4K).",
+                useDefaultBg: "Использовать фон по умолчанию", suggestTitle: "Поисковые подсказки",
+                suggestDesc: "Показывать релевантные подсказки при вводе.", enableSuggest: "Включить подсказки",
+                safeTitle: "Безопасный поиск", safeDesc: "Отключить сбор Cookie при поиске для защиты конфиденциальности.",
+                enableSafe: "Включить безопасный поиск", sourceTitle: "Источник поиска",
+                sourceDesc: "Настройте поисковую систему по умолчанию.",
+                langTitle: "Язык / Language", langDesc: "Мгновенно переключить язык интерфейса.",
+                uiTitle: "Улучшенное взаимодействие", uiDesc: "Включить анимацию загрузки при запуске и эффект поиска.",
+                enableUi: "Включить улучшение UI", networkMonitor: "Мониторинг сети", download: "Загрузка",
+                upload: "Отправка", langSwitched: "Язык успешно изменён!",
+                debugTitle: "Панель отладки",
+                debugDesc: "Включить расширенную панель отладки с FPS-монитором, захватом сети и отслеживанием действий.",
+                debugEnable: "Включить панель отладки",
+                debugLevel: "Уровень логирования",
+                debugBrief: "Кратко",
+                debugDetailed: "Подробно",
+                debugLogsTab: "Логи",
+                debugNetworkTab: "Сеть",
+                debugPerfTab: "Производительность",
+                debugSystemTab: "Система",
+                debugClearLogs: "Очистить логи",
+                debugExportLogs: "Экспортировать логи",
+                debugRequestUrl: "URL",
+                debugRequestMethod: "Метод",
+                debugRequestStatus: "Статус",
+                debugRequestTime: "Время",
+                debugRequestSize: "Размер",
+                debugPerfFps: "FPS",
+                debugPerfFrameTime: "Время кадра",
+                debugPerfActions: "Действий",
+                debugPerfLogs: "Логов",
+                debugSysBrowser: "Браузер",
+                debugSysScreen: "Экран",
+                debugSysNetwork: "Сеть",
+                debugSysUptime: "Время работы",
+            },
+            fr: {
+                searchPlaceholder: "Rechercher sur le web...", searchBtn: "Rechercher", loadingText: "Recherche...",
+                footer: "© 2026 Qin_Xiaoyou Moteur de recherche léger", settingsTitle: "Paramètres",
+                bgTitle: "Arrière-plan personnalisé", bgDesc: "Téléchargez une image ou une vidéo pour remplacer l'arrière-plan par défaut.",
+                imgBgBtn: "Arrière-plan image", videoBgBtn: "Arrière-plan vidéo", uploadImgBtn: "Télécharger une image",
+                uploadVideoBtn: "Choisir une vidéo", saveVideoBtn: "💾 Enregistrer l'arrière-plan vidéo",
+                clearCacheBtn: "Effacer le cache d'arrière-plan", resetBgBtn: "🔄 Réinitialiser l'arrière-plan",
+                bgTip: "Astuce : les vidéos sont stockées localement en binaire d'origine (4K pris en charge).",
+                useDefaultBg: "Utiliser l'arrière-plan par défaut", suggestTitle: "Suggestions de recherche",
+                suggestDesc: "Afficher des suggestions pertinentes pendant la saisie.", enableSuggest: "Activer les suggestions",
+                safeTitle: "Recherche sécurisée", safeDesc: "Désactiver la collecte de cookies pour protéger la vie privée.",
+                enableSafe: "Activer la recherche sécurisée", sourceTitle: "Source de recherche",
+                sourceDesc: "Personnalisez le moteur de recherche par défaut.",
+                langTitle: "Langue / Language", langDesc: "Changer instantanément la langue de l'interface.",
+                uiTitle: "Interaction améliorée", uiDesc: "Activer l'animation de démarrage et l'effet de chargement.",
+                enableUi: "Activer l'amélioration de l'UI", networkMonitor: "Moniteur réseau", download: "Téléchargement",
+                upload: "Envoi", langSwitched: "Langue changée avec succès !",
+                debugTitle: "Panneau de débogage",
+                debugDesc: "Activez le panneau de débogage avancé avec moniteur FPS, capture réseau et suivi des actions.",
+                debugEnable: "Activer le panneau de débogage",
+                debugLevel: "Niveau de journal",
+                debugBrief: "Bref",
+                debugDetailed: "Détaillé",
+                debugLogsTab: "Journaux",
+                debugNetworkTab: "Réseau",
+                debugPerfTab: "Performance",
+                debugSystemTab: "Système",
+                debugClearLogs: "Effacer les journaux",
+                debugExportLogs: "Exporter les journaux",
+                debugRequestUrl: "URL",
+                debugRequestMethod: "Méthode",
+                debugRequestStatus: "Statut",
+                debugRequestTime: "Temps",
+                debugRequestSize: "Taille",
+                debugPerfFps: "FPS",
+                debugPerfFrameTime: "Temps d'image",
+                debugPerfActions: "Actions",
+                debugPerfLogs: "Journaux",
+                debugSysBrowser: "Navigateur",
+                debugSysScreen: "Écran",
+                debugSysNetwork: "Réseau",
+                debugSysUptime: "Temps de fonctionnement",
+            },
+            es: {
+                searchPlaceholder: "Buscar en la web...", searchBtn: "Buscar", loadingText: "Buscando...",
+                footer: "© 2026 Qin_Xiaoyou Motor de búsqueda ligero", settingsTitle: "Ajustes",
+                bgTitle: "Fondo personalizado", bgDesc: "Sube una imagen o un vídeo para reemplazar el fondo predeterminado.",
+                imgBgBtn: "Fondo de imagen", videoBgBtn: "Fondo de vídeo", uploadImgBtn: "Subir imagen",
+                uploadVideoBtn: "Seleccionar vídeo", saveVideoBtn: "💾 Guardar fondo de vídeo",
+                clearCacheBtn: "Borrar caché de fondo", resetBgBtn: "🔄 Restablecer fondo",
+                bgTip: "Consejo: los vídeos se guardan localmente en binario original (compatible con 4K).",
+                useDefaultBg: "Usar fondo predeterminado", suggestTitle: "Sugerencias de búsqueda",
+                suggestDesc: "Mostrar sugerencias relevantes mientras escribes.", enableSuggest: "Activar sugerencias",
+                safeTitle: "Búsqueda segura", safeDesc: "Desactivar la recopilación de cookies para proteger la privacidad.",
+                enableSafe: "Activar búsqueda segura", sourceTitle: "Fuente de búsqueda",
+                sourceDesc: "Personaliza el motor de búsqueda predeterminado.",
+                langTitle: "Idioma / Language", langDesc: "Cambia el idioma de la interfaz al instante.",
+                uiTitle: "Interacción mejorada", uiDesc: "Activar la animación de inicio y el efecto de carga.",
+                enableUi: "Activar mejora de UI", networkMonitor: "Monitor de red", download: "Descarga",
+                upload: "Subida", langSwitched: "¡Idioma cambiado correctamente!",
+                debugTitle: "Panel de depuración",
+                debugDesc: "Active el panel de depuración avanzado con monitor FPS, captura de red y seguimiento de acciones.",
+                debugEnable: "Activar panel de depuración",
+                debugLevel: "Nivel de registro",
+                debugBrief: "Breve",
+                debugDetailed: "Detallado",
+                debugLogsTab: "Registros",
+                debugNetworkTab: "Red",
+                debugPerfTab: "Rendimiento",
+                debugSystemTab: "Sistema",
+                debugClearLogs: "Borrar registros",
+                debugExportLogs: "Exportar registros",
+                debugRequestUrl: "URL",
+                debugRequestMethod: "Método",
+                debugRequestStatus: "Estado",
+                debugRequestTime: "Tiempo",
+                debugRequestSize: "Tamaño",
+                debugPerfFps: "FPS",
+                debugPerfFrameTime: "Tiempo de cuadro",
+                debugPerfActions: "Acciones",
+                debugPerfLogs: "Registros",
+                debugSysBrowser: "Navegador",
+                debugSysScreen: "Pantalla",
+                debugSysNetwork: "Red",
+                debugSysUptime: "Tiempo de actividad",
+            }
+        };
+
+        window.currentLang = localStorage.getItem('uiLang') || 'en';
+        window.t = function(key) {
+            const dict = I18N[window.currentLang] || I18N.en;
+            return (dict && dict[key] != null) ? dict[key] : (I18N.en[key] != null ? I18N.en[key] : key);
+        };
+        function applyLanguage(lang) {
+            if (!I18N[lang]) lang = 'en';
+            window.currentLang = lang;
+            localStorage.setItem('uiLang', lang);
+            document.documentElement.setAttribute('lang', lang);
+            document.querySelectorAll('[data-i18n]').forEach(node => {
+                const key = node.getAttribute('data-i18n');
+                if (I18N[lang][key] != null) node.textContent = I18N[lang][key];
+            });
+            document.querySelectorAll('[data-i18n-ph]').forEach(node => {
+                const key = node.getAttribute('data-i18n-ph');
+                if (I18N[lang][key] != null) node.setAttribute('placeholder', I18N[lang][key]);
+            });
+            if (window.debug && window.debug.enabled) {
+                window.debug.refreshUI();
+                window.debug.render();
+            }
+            if (typeof window.refreshMonitorLabels === 'function') window.refreshMonitorLabels();
+            document.dispatchEvent(new Event('languageChanged'));
+        }
+        window.applyLanguage = applyLanguage;
+        const debug = {
+            enabled: false,
+            level: 'detailed',
+            logs: [],
+            networkLogs: [],
+            perfLogs: [],
+            sysInfo: {},
+            actionCount: 0,
+            fpsHistory: [],
+            frameTimeHistory: [],
+            panel: document.getElementById('debugPanel'),
+            body: document.getElementById('debugBody'),
+            clearBtn: document.getElementById('debugClearBtn'),
+            closeBtn: document.getElementById('debugCloseBtn'),
+            exportBtn: document.getElementById('debugExportBtn'),
+            toggle: document.getElementById('debugToggle'),
+            levelSelect: document.getElementById('debugLevelSelect'),
+            tabs: document.querySelectorAll('.tab-btn'),
+            activeTab: 'logs',
+            startTime: Date.now(),
+            perfAnimationId: null,
+            _renderPending: false,
+
+            init() {
+                const saved = localStorage.getItem('debugEnabled') === 'true';
+                const savedLevel = localStorage.getItem('debugLevel') || 'detailed';
+                this.toggle.checked = saved;
+                this.levelSelect.value = savedLevel;
+                this.level = savedLevel;
+                this.setEnabled(saved);
+
+                this.toggle.addEventListener('change', () => {
+                    this.setEnabled(this.toggle.checked);
+                    localStorage.setItem('debugEnabled', this.toggle.checked);
+                });
+
+                this.levelSelect.addEventListener('change', () => {
+                    this.level = this.levelSelect.value;
+                    localStorage.setItem('debugLevel', this.level);
+                    this.log(`Log level changed to ${this.level}`, 'info');
+                    if (this.enabled) this.render();
+                });
+
+                this.clearBtn.addEventListener('click', () => {
+                    this.clearAll();
+                    this.log('🗑️ All logs cleared', 'info');
+                });
+
+                this.closeBtn.addEventListener('click', () => {
+                    this.setEnabled(false);
+                    this.toggle.checked = false;
+                    localStorage.setItem('debugEnabled', 'false');
+                });
+
+                this.exportBtn.addEventListener('click', () => {
+                    this.exportLogs();
+                });
+
+                this.tabs.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.tabs.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.activeTab = btn.dataset.tab;
+                        this.render();
+                    });
+                });
+
+                this.interceptFetch();
+                this.interceptXHR();
+                this.collectSystemInfo();
+                this.startFPSMonitor();
+                this.bindActionTracking();
+
+                setInterval(() => {
+                    if (this.enabled) {
+                        this.collectSystemInfo();
+                        if (this.activeTab === 'system') this.render();
+                    }
+                }, 30000);
+
+                document.addEventListener('languageChanged', () => {
+                    if (this.enabled) {
+                        this.refreshUI();
+                        this.render();
+                    }
+                });
+            },
+
+            setEnabled(on) {
+                this.enabled = on;
+                this.panel.classList.toggle('active', on);
+                if (on) {
+                    this.log('🔍 Debug mode enabled (enhanced with FPS monitor)', 'info');
+                    this.log('📡 Network capture active, action tracking started.', 'info');
+                    this.collectSystemInfo();
+                    this.render();
+                } else {
+                    if (this.perfAnimationId) {
+                        cancelAnimationFrame(this.perfAnimationId);
+                        this.perfAnimationId = null;
+                    }
+                }
+            },
+
+            log(msg, type = 'info') {
+                if (!this.enabled) return;
+                const entry = { time: Date.now(), msg: msg, type: type };
+                this.logs.push(entry);
+                if (this.logs.length > 1000) this.logs.shift();
+                if (this.activeTab === 'logs') this.render();
+            },
+
+            logNetwork(req) {
+                if (!this.enabled) return;
+                this.networkLogs.push(req);
+                if (this.networkLogs.length > 200) this.networkLogs.shift();
+                if (this.activeTab === 'network') this.render();
+            },
+
+            logPerf(label, value) {
+                if (!this.enabled) return;
+                this.perfLogs.push({ label, value, time: Date.now() });
+                if (this.perfLogs.length > 100) this.perfLogs.shift();
+                if (this.activeTab === 'performance') this.render();
+            },
+
+            clearAll() {
+                this.logs = [];
+                this.networkLogs = [];
+                this.perfLogs = [];
+                this.fpsHistory = [];
+                this.frameTimeHistory = [];
+                this.actionCount = 0;
+                this.render();
+            },
+
+            collectSystemInfo() {
+                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                this.sysInfo = {
+                    browser: navigator.userAgent,
+                    screen: `${window.screen.width}x${window.screen.height}`,
+                    network: conn ? `${conn.effectiveType} (${conn.downlink} Mbps)` : 'Unknown',
+                    uptime: ((Date.now() - this.startTime) / 1000).toFixed(0) + 's',
+                    language: navigator.language,
+                    platform: navigator.platform,
+                };
+            },
+            startFPSMonitor() {
+                let lastTime = performance.now();
+                let frames = 0;
+                const update = () => {
+                    if (!this.enabled) {
+                        this.perfAnimationId = requestAnimationFrame(update);
+                        return;
+                    }
+                    const now = performance.now();
+                    const delta = now - lastTime;
+                    frames++;
+                    if (delta >= 1000) {
+                        const fps = Math.round((frames * 1000) / delta);
+                        const frameTime = delta / frames;
+                        this.fpsHistory.push(fps);
+                        this.frameTimeHistory.push(frameTime);
+                        if (this.fpsHistory.length > 120) {
+                            this.fpsHistory.shift();
+                            this.frameTimeHistory.shift();
+                        }
+                        frames = 0;
+                        lastTime = now;
+                        if (this.enabled && this.activeTab === 'performance') {
+                            if (!this._renderPending) {
+                                this._renderPending = true;
+                                requestAnimationFrame(() => {
+                                    this.renderPerformance();
+                                    this._renderPending = false;
+                                });
+                            }
+                        }
+                    }
+                    this.perfAnimationId = requestAnimationFrame(update);
+                };
+                this.perfAnimationId = requestAnimationFrame(update);
+            },
+            bindActionTracking() {
+                document.addEventListener('click', (e) => {
+                    const target = e.target;
+                    const tag = target.tagName.toLowerCase();
+                    let desc = '';
+                    if (tag === 'button') desc = target.textContent.trim() || 'button';
+                    else if (tag === 'a') desc = target.textContent.trim() || 'link';
+                    else if (tag === 'input' || tag === 'select') desc = target.id || target.name || tag;
+                    else desc = target.className || tag;
+                    this.actionCount++;
+                    this.log(`👆 Click: "${desc}"`, 'info');
+                }, true);
+
+                document.addEventListener('change', (e) => {
+                    const target = e.target;
+                    const tag = target.tagName.toLowerCase();
+                    if (tag === 'input' || tag === 'select' || tag === 'textarea') {
+                        const val = target.value || 'changed';
+                        this.actionCount++;
+                        this.log(`✏️ Change: ${target.id || target.name} = ${val}`, 'info');
+                    }
+                }, true);
+
+                document.addEventListener('languageChanged', () => {
+                    this.actionCount++;
+                    this.log(`🌐 Language changed to ${window.currentLang}`, 'info');
+                });
+
+                const origThemeToggle = document.getElementById('themeToggle');
+                if (origThemeToggle) {
+                    origThemeToggle.addEventListener('click', () => {
+                        setTimeout(() => {
+                            const isLight = document.body.classList.contains('light-theme');
+                            this.actionCount++;
+                            this.log(`🎨 Theme changed to ${isLight ? 'Light' : 'Dark'}`, 'info');
+                        }, 100);
+                    });
+                }
+            },
+            interceptFetch() {
+                const originalFetch = window.fetch;
+                const self = this;
+                window.fetch = function(...args) {
+                    const startTime = Date.now();
+                    const url = args[0];
+                    const options = args[1] || {};
+                    const method = options.method || 'GET';
+                    if (typeof url === 'string' && url.includes('/api/')) {
+                        self.log(`🌐 Fetch: ${method} ${url}`, 'info');
+                    }
+                    return originalFetch.apply(this, args).then(response => {
+                        const elapsed = Date.now() - startTime;
+                        const size = response.headers.get('content-length') || '?';
+                        if (typeof url === 'string' && url.includes('/api/')) {
+                            self.logNetwork({
+                                url: url,
+                                method: method,
+                                status: response.status,
+                                time: elapsed + 'ms',
+                                size: size + ' B',
+                                timestamp: Date.now(),
+                                ok: response.ok
+                            });
+                        }
+                        return response;
+                    }).catch(err => {
+                        if (typeof url === 'string' && url.includes('/api/')) {
+                            self.logNetwork({
+                                url: url,
+                                method: method,
+                                status: 'ERR',
+                                time: (Date.now() - startTime) + 'ms',
+                                size: '0',
+                                timestamp: Date.now(),
+                                ok: false,
+                                error: err.message
+                            });
+                        }
+                        throw err;
+                    });
+                };
+            },
+
+            interceptXHR() {
+                const self = this;
+                const originalOpen = XMLHttpRequest.prototype.open;
+                const originalSend = XMLHttpRequest.prototype.send;
+                XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+                    this._method = method;
+                    this._url = url;
+                    this._startTime = Date.now();
+                    return originalOpen.apply(this, [method, url, ...rest]);
+                };
+                XMLHttpRequest.prototype.send = function(...args) {
+                    const onReadyStateChange = this.onreadystatechange;
+                    this.onreadystatechange = function() {
+                        if (this.readyState === 4 && this._url && this._url.includes('/api/')) {
+                            const elapsed = Date.now() - this._startTime;
+                            const size = this.getResponseHeader('content-length') || '?';
+                            const status = this.status;
+                            self.logNetwork({
+                                url: this._url,
+                                method: this._method || 'GET',
+                                status: status,
+                                time: elapsed + 'ms',
+                                size: size + ' B',
+                                timestamp: Date.now(),
+                                ok: status >= 200 && status < 300
+                            });
+                        }
+                        if (onReadyStateChange) onReadyStateChange.apply(this, arguments);
+                    };
+                    return originalSend.apply(this, args);
+                };
+            },
+
+            exportLogs() {
+                const data = {
+                    version: '2.0',
+                    exported: new Date().toISOString(),
+                    logs: this.logs,
+                    network: this.networkLogs,
+                    performance: this.perfLogs,
+                    fps: this.fpsHistory,
+                    frameTime: this.frameTimeHistory,
+                    system: this.sysInfo,
+                    actionCount: this.actionCount,
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `debug_logs_${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                this.log('📤 Logs exported successfully', 'ok');
+            },
+
+            refreshUI() {
+                this.panel.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    const val = window.t(key);
+                    if (val) el.textContent = val;
+                });
+                this.panel.querySelectorAll('select option[data-i18n]').forEach(opt => {
+                    const key = opt.getAttribute('data-i18n');
+                    const val = window.t(key);
+                    if (val) opt.textContent = val;
+                });
+            },
+            render() {
+                if (!this.enabled) return;
+                switch (this.activeTab) {
+                    case 'logs': this.renderLogs(); break;
+                    case 'network': this.renderNetwork(); break;
+                    case 'performance': this.renderPerformance(); break;
+                    case 'system': this.renderSystem(); break;
+                }
+                const body = this.body;
+                if (body) body.scrollTop = body.scrollHeight;
+            },
+
+            renderLogs() {
+                const body = this.body;
+                if (this.logs.length === 0) {
+                    body.innerHTML = `<div style="color:#888;padding:10px;text-align:center;">${window.t('debugLogsTab')} - ${window.t('debugClearLogs')}</div>`;
+                    return;
+                }
+                let entries = this.logs;
+                if (this.level === 'brief') {
+                    entries = entries.filter(e => e.type === 'error' || e.type === 'ok');
+                }
+                const html = entries.slice(-80).map(e => {
+                    const time = new Date(e.time).toLocaleTimeString();
+                    const cls = 'log-' + e.type;
+                    return `<div class="log-entry"><span class="log-time">[${time}]</span><span class="${cls}">${e.msg}</span></div>`;
+                }).join('');
+                body.innerHTML = html;
+            },
+
+            renderNetwork() {
+                const body = this.body;
+                if (this.networkLogs.length === 0) {
+                    body.innerHTML = `<div style="color:#888;padding:10px;text-align:center;">${window.t('debugNetworkTab')} - ${window.t('debugClearLogs')}</div>`;
+                    return;
+                }
+                const items = this.networkLogs.slice(-50);
+                const html = items.map(req => {
+                    const statusCls = req.ok ? 'ok' : 'error';
+                    const statusText = req.status === 'ERR' ? 'ERR' : req.status;
+                    return `<div class="network-entry">
+                        <span class="method">${req.method}</span>
+                        <span class="status ${statusCls}">${statusText}</span>
+                        <span class="time">${req.time}</span>
+                        <span class="size">${req.size}</span>
+                        <span class="url" title="${req.url}">${req.url}</span>
+                    </div>`;
+                }).join('');
+                body.innerHTML = html;
+            },
+            renderPerformance() {
+                if (!this.enabled || this.activeTab !== 'performance') return;
+                const body = this.body;
+                const fpsData = this.fpsHistory.slice(-60);
+                const ftData = this.frameTimeHistory.slice(-60);
+                const validFps = fpsData.filter(v => v > 0 && v < 200);
+                const validFt = ftData.filter(v => v > 0 && v < 100);
+                const avgFps = validFps.length ? (validFps.reduce((a, b) => a + b, 0) / validFps.length).toFixed(1) : '--';
+                const currentFps = fpsData.length ? fpsData[fpsData.length - 1] : '--';
+                const avgFT = validFt.length ? (validFt.reduce((a, b) => a + b, 0) / validFt.length).toFixed(1) : '--';
+                const currentFT = ftData.length ? ftData[ftData.length - 1].toFixed(1) : '--';
+                let html = `
+                    <div class="perf-stats">
+                        <span class="stat-item"><span class="stat-label">${window.t('debugPerfFps')} (${window.t('debugPerfTab')}/avg):</span> <span class="stat-value">${currentFps} / ${avgFps}</span></span>
+                        <span class="stat-item"><span class="stat-label">${window.t('debugPerfFrameTime')} (${window.t('debugPerfTab')}/avg):</span> <span class="stat-value">${currentFT} ms / ${avgFT} ms</span></span>
+                        <span class="stat-item"><span class="stat-label">${window.t('debugPerfActions')}:</span> <span class="stat-value">${this.actionCount}</span></span>
+                        <span class="stat-item"><span class="stat-label">${window.t('debugPerfLogs')}:</span> <span class="stat-value">${this.logs.length}</span></span>
+                    </div>
+                    <div class="perf-chart-container"><canvas id="perfChartCanvas"></canvas></div>
+                `;
+                body.innerHTML = html;
+                const canvas = document.getElementById('perfChartCanvas');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const rect = canvas.parentElement.getBoundingClientRect();
+                const width = rect.width || 400;
+                const height = rect.height || 150;
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = width * dpr;
+                canvas.height = height * dpr;
+                canvas.style.width = width + 'px';
+                canvas.style.height = height + 'px';
+                ctx.scale(dpr, dpr);
+                const pad = { top: 12, bottom: 16, left: 36, right: 16 };
+                const chartW = width - pad.left - pad.right;
+                const chartH = height - pad.top - pad.bottom;
+                ctx.clearRect(0, 0, width, height);
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+                ctx.lineWidth = 0.5;
+                for (let i = 0; i < 5; i++) {
+                    const y = pad.top + (chartH / 5) * i;
+                    ctx.beginPath();
+                    ctx.moveTo(pad.left, y);
+                    ctx.lineTo(width - pad.right, y);
+                    ctx.stroke();
+                }
+                if (fpsData.length > 1) {
+                    const maxFps = Math.max(60, ...fpsData);
+                    ctx.strokeStyle = '#6f6';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    for (let i = 0; i < fpsData.length; i++) {
+                        const x = pad.left + (i / (fpsData.length - 1)) * chartW;
+                        const y = pad.top + chartH - Math.min((fpsData[i] / maxFps) * chartH, chartH);
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                    ctx.lineTo(pad.left + chartW, pad.top + chartH);
+                    ctx.lineTo(pad.left, pad.top + chartH);
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(100,255,100,0.08)';
+                    ctx.fill();
+                }
+                if (ftData.length > 1) {
+                    const maxFT = Math.max(50, ...ftData);
+                    ctx.strokeStyle = '#fc6';
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    for (let i = 0; i < ftData.length; i++) {
+                        const x = pad.left + (i / (ftData.length - 1)) * chartW;
+                        const y = pad.top + chartH - Math.min((ftData[i] / maxFT) * chartH, chartH);
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+                ctx.fillStyle = '#888';
+                ctx.font = '9px monospace';
+                ctx.textAlign = 'right';
+                ctx.fillText('FPS', pad.left - 4, pad.top + 10);
+                ctx.fillText('FT', pad.left - 4, pad.top + chartH - 2);
+                ctx.textAlign = 'center';
+                ctx.fillText('Time (frames)', pad.left + chartW / 2, height - 2);
+            },
+
+            renderSystem() {
+                const body = this.body;
+                const info = this.sysInfo;
+                const html = `
+                    <div class="sys-entry"><strong>${window.t('debugSysBrowser')}:</strong> ${info.browser}</div>
+                    <div class="sys-entry"><strong>${window.t('debugSysScreen')}:</strong> ${info.screen}</div>
+                    <div class="sys-entry"><strong>${window.t('debugSysNetwork')}:</strong> ${info.network}</div>
+                    <div class="sys-entry"><strong>${window.t('debugSysUptime')}:</strong> ${info.uptime}</div>
+                    <div class="sys-entry"><strong>Language:</strong> ${info.language}</div>
+                    <div class="sys-entry"><strong>Platform:</strong> ${info.platform}</div>
+                    <div class="sys-entry"><strong>Log Level:</strong> ${this.level}</div>
+                    <div class="sys-entry"><strong>Log Entries:</strong> ${this.logs.length}</div>
+                    <div class="sys-entry"><strong>Network Records:</strong> ${this.networkLogs.length}</div>
+                    <div class="sys-entry"><strong>Performance Records:</strong> ${this.perfLogs.length}</div>
+                    <div class="sys-entry"><strong>FPS History:</strong> ${this.fpsHistory.length} samples</div>
+                    <div class="sys-entry"><strong>Actions Tracked:</strong> ${this.actionCount}</div>
+                `;
+                body.innerHTML = html;
+            }
+        };
+
+        window.debug = debug;
+        const el = {
+            loaderPage: document.getElementById('loaderPage'),
+            loaderProgressBar: document.getElementById('loaderProgressBar'),
+            searchLoading: document.getElementById('searchLoading'),
+            searchLoadingMask: document.getElementById('searchLoadingMask'),
+            uiEnhanceToggle: document.getElementById('uiEnhanceToggle'),
+            themeToggle: document.getElementById('themeToggle'),
+            themeIcon: document.getElementById('themeIcon'),
+            settingsBtn: document.getElementById('settingsBtn'),
+            settingsPanel: document.getElementById('settingsPanel'),
+            closeSettings: document.getElementById('closeSettings'),
+            docsBtn: document.getElementById('docsBtn'),
+            docsPanel: document.getElementById('docsPanel'),
+            closeDocs: document.getElementById('closeDocs'),
+            searchBox: document.getElementById('searchBox'),
+            searchBtn: document.getElementById('searchBtn'),
+            suggestionsBox: document.getElementById('suggestionsBox'),
+            suggestionsContainer: document.getElementById('suggestionsContainer'),
+            dynamicBg: document.getElementById('dynamicBg'),
+            customBg: document.getElementById('customBg'),
+            customVideoBg: document.getElementById('customVideoBg'),
+            bgUpload: document.getElementById('bgUpload'),
+            videoUpload: document.getElementById('videoUpload'),
+            uploadImgBtn: document.getElementById('uploadImgBtn'),
+            uploadVideoBtn: document.getElementById('uploadVideoBtn'),
+            saveVideoBtn: document.getElementById('saveVideoBtn'),
+            clearCacheBtn: document.getElementById('clearCacheBtn'),
+            defaultBgToggle: document.getElementById('defaultBgToggle'),
+            suggestionsToggle: document.getElementById('suggestionsToggle'),
+            imgBgBtn: document.getElementById('imgBgBtn'),
+            videoBgBtn: document.getElementById('videoBgBtn'),
+            storageErrorTip: document.getElementById('storageErrorTip'),
+            storageSuccessTip: document.getElementById('storageSuccessTip'),
+            mainContainer: document.getElementById('mainContainer'),
+            safeSearchToggle: document.getElementById('safeSearchToggle'),
+            searchSourceSelector: document.getElementById('searchSourceSelector'),
+            toastNotice: document.getElementById('toastNotice'),
+            resetBgBtn: document.getElementById('resetBgBtn'),
+            languageSelector: document.getElementById('languageSelector')
+        };
+
+        let tempVideoFile = null;
+        let currentVideoUrl = null;
+        const bgState = { activeType: 'default' };
+        const searchSourceMap = {
+            bing: 'https://www.bing.com/search?q=',
+            google: 'https://www.google.com/search?q=',
+            baidu: 'https://www.baidu.com/s?wd='
+        };
+
+        function showToast(text) {
+            el.toastNotice.textContent = text || 'Operation successful！';
+            el.toastNotice.classList.add('active');
+            setTimeout(() => el.toastNotice.classList.remove('active'), 2000);
+        }
+
+        function initStartupLoader() {
+            window.onload = () => {
+                const isUiEnhance = localStorage.getItem('uiEnhance') !== 'false';
+                if (!isUiEnhance) {
+                    el.loaderPage.style.display = 'none';
+                    el.mainContainer.style.opacity = 1;
+                    el.searchBox.focus();
+                    return;
+                }
+                document.body.style.overflow = 'hidden';
+                el.loaderProgressBar.style.width = '100%';
+                setTimeout(() => {
+                    el.loaderPage.style.opacity = 0;
+                    el.loaderPage.style.transition = 'opacity 0.5s ease';
+                    setTimeout(() => {
+                        el.loaderPage.style.display = 'none';
+                        el.mainContainer.style.opacity = 1;
+                        el.searchBox.focus();
+                        document.body.style.overflow = 'auto';
+                    }, 500);
+                }, 3000);
+            };
+        }
+
+        function searchWithLoading(query) {
+            const startTime = performance.now();
+            const isUiEnhance = localStorage.getItem('uiEnhance') !== 'false';
+            if (!isUiEnhance) {
+                performSearchCore(query);
+                el.searchBox.value = '';
+                return;
+            }
+            document.body.style.overflow = 'hidden';
+            el.searchLoadingMask.classList.add('active');
+            el.searchLoading.classList.add('active');
+            setTimeout(() => {
+                performSearchCore(query);
+                const elapsed = (performance.now() - startTime).toFixed(0);
+                debug.logPerf('Search Operation', elapsed + 'ms');
+                document.body.style.overflow = 'auto';
+                el.searchLoadingMask.classList.remove('active');
+                el.searchLoading.classList.remove('active');
+                setTimeout(() => {
+                    el.searchBox.value = '';
+                    el.searchBox.blur();
+                }, 1000);
+            }, 2000);
+        }
+
+        function performSearchCore(query) {
+            const selectedSource = localStorage.getItem('searchSource') || 'bing';
+            const searchBaseUrl = searchSourceMap[selectedSource];
+            const searchUrl = `${searchBaseUrl}${encodeURIComponent(query)}`;
+            if (el.safeSearchToggle.checked) {
+                window.open(searchUrl, '_blank', 'noopener,noreferrer,disableCookie=true');
+            } else {
+                window.open(searchUrl, '_blank');
+            }
+        }
+
+        el.docsBtn.onclick = () => {
+            el.settingsPanel.classList.remove('active');
+            el.docsPanel.classList.add('active');
+        };
+        el.closeDocs.onclick = () => {
+            el.docsPanel.classList.remove('active');
+        };
+        document.addEventListener('click', (e) => {
+            const isClickInsideDocs = el.docsPanel.contains(e.target) || el.docsBtn.contains(e.target);
+            const isClickInsideSettings = el.settingsPanel.contains(e.target) || el.settingsBtn.contains(e.target);
+            if (!isClickInsideDocs && el.docsPanel.classList.contains('active')) {
+                el.docsPanel.classList.remove('active');
+            }
+            if (!isClickInsideSettings && el.settingsPanel.classList.contains('active')) {
+                el.settingsPanel.classList.remove('active');
+            }
+        });
+
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                if (!('indexedDB' in window)) {
+                    reject(new Error('Browser does not support IndexedDB'));
+                    return;
+                }
+                const request = indexedDB.open('ManualVideoBgDB', 1);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('savedVideos')) {
+                        db.createObjectStore('savedVideos', { keyPath: 'videoId' });
+                    }
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => reject(new Error(`Failed to open DB: ${e.target.error.message}`));
+            });
+        }
+        async function saveVideoToDB(videoId, file) {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('savedVideos', 'readwrite');
+                const store = tx.objectStore('savedVideos');
+                const videoData = { videoId, file, name: file.name, size: file.size, type: file.type, saveTime: Date.now() };
+                const request = store.put(videoData);
+                request.onsuccess = () => resolve();
+                request.onerror = (e) => reject(new Error(`Save failed: ${e.target.error.message}`));
+            });
+        }
+        async function loadSavedVideo() {
+            const savedVideoId = localStorage.getItem('savedVideoId');
+            if (!savedVideoId) return null;
+            try {
+                const db = await openDB();
+                return new Promise((resolve) => {
+                    const tx = db.transaction('savedVideos', 'readonly');
+                    const store = tx.objectStore('savedVideos');
+                    const request = store.get(savedVideoId);
+                    request.onsuccess = (e) => resolve(e.target.result || null);
+                    request.onerror = () => resolve(null);
+                });
+            } catch (e) { return null; }
+        }
+        function previewVideoFile(file) {
+            if (currentVideoUrl) URL.revokeObjectURL(currentVideoUrl);
+            const url = URL.createObjectURL(file);
+            currentVideoUrl = url;
+            const video = el.customVideoBg;
+            video.pause();
+            video.src = '';
+            video.src = url;
+            video.muted = true;
+            video.loop = true;
+            video.playsInline = true;
+            video.onloadeddata = () => {
+                el.dynamicBg.style.opacity = 0;
+                video.style.opacity = document.body.classList.contains('light-theme') ? 1 : 0.5;
+                video.play().catch(() => {});
+                bgState.activeType = 'video';
+            };
+            video.onerror = () => {
+                el.storageErrorTip.textContent = 'Video preview failed: Unsupported format or corrupted file';
+                el.storageErrorTip.style.display = 'block';
+                tempVideoFile = null;
+                el.saveVideoBtn.style.display = 'none';
+            };
+        }
+        el.uploadVideoBtn.onclick = () => el.videoUpload.click();
+        el.videoUpload.onchange = (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            tempVideoFile = file;
+            previewVideoFile(file);
+            el.saveVideoBtn.style.display = 'inline-block';
+            el.storageSuccessTip.textContent = 'Video previewed! Click "Save" to make it persistent.';
+            el.storageSuccessTip.style.display = 'block';
+            el.storageErrorTip.style.display = 'none';
+        };
+        el.saveVideoBtn.onclick = async () => {
+            if (!tempVideoFile) {
+                el.storageErrorTip.textContent = 'Please select a video first!';
+                el.storageErrorTip.style.display = 'block';
+                return;
+            }
+            try {
+                const videoId = `vid-${Date.now()}-${btoa(tempVideoFile.name).slice(0, 8)}`;
+                await saveVideoToDB(videoId, tempVideoFile);
+                localStorage.setItem('savedVideoId', videoId);
+                localStorage.setItem('savedVideoName', tempVideoFile.name);
+                el.storageSuccessTip.textContent = `✅ Video saved successfully! Refresh to verify.`;
+                el.storageSuccessTip.style.display = 'block';
+                el.storageErrorTip.style.display = 'none';
+                el.saveVideoBtn.style.display = 'none';
+                el.defaultBgToggle.checked = false;
+            } catch (e) {
+                el.storageErrorTip.textContent = `Save failed: ${e.message}`;
+                el.storageErrorTip.style.display = 'block';
+            }
+        };
+        el.clearCacheBtn.onclick = async () => {
+            try {
+                if (currentVideoUrl) { URL.revokeObjectURL(currentVideoUrl); currentVideoUrl = null; }
+                tempVideoFile = null;
+                const db = await openDB();
+                const tx = db.transaction('savedVideos', 'readwrite');
+                await tx.objectStore('savedVideos').clear();
+                localStorage.removeItem('savedVideoId');
+                localStorage.removeItem('savedVideoName');
+            } catch (e) {
+                el.storageErrorTip.textContent = `Clear cache failed: ${e.message}`;
+                el.storageErrorTip.style.display = 'block';
+            } finally {
+                el.defaultBgToggle.checked = true;
+                el.dynamicBg.style.opacity = 1;
+                el.customVideoBg.style.opacity = 0;
+                el.customBg.style.opacity = 0;
+                bgState.activeType = 'default';
+                el.saveVideoBtn.style.display = 'none';
+                el.storageSuccessTip.textContent = 'Cache cleared successfully!';
+                el.storageSuccessTip.style.display = 'block';
+                setTimeout(() => {
+                    el.storageSuccessTip.style.display = 'none';
+                    el.storageErrorTip.style.display = 'none';
+                }, 3000);
+            }
+        };
+        el.resetBgBtn.onclick = () => {
+            localStorage.removeItem('customBg');
+            localStorage.removeItem('savedVideoId');
+            localStorage.removeItem('savedVideoName');
+            if (currentVideoUrl) { URL.revokeObjectURL(currentVideoUrl); currentVideoUrl = null; }
+            tempVideoFile = null;
+            el.dynamicBg.style.opacity = 1;
+            el.customBg.style.opacity = 0;
+            el.customVideoBg.style.opacity = 0;
+            el.customBg.src = '';
+            el.customVideoBg.src = '';
+            bgState.activeType = 'default';
+            el.defaultBgToggle.checked = true;
+            el.saveVideoBtn.style.display = 'none';
+            el.storageSuccessTip.textContent = 'Custom background reset successfully!';
+            el.storageSuccessTip.style.display = 'block';
+            setTimeout(() => { el.storageSuccessTip.style.display = 'none'; }, 3000);
+        };
+        el.imgBgBtn.addEventListener('click', () => {
+            el.imgBgBtn.classList.add('active');
+            el.videoBgBtn.classList.remove('active');
+            el.uploadImgBtn.style.display = 'inline-block';
+            el.uploadVideoBtn.style.display = 'none';
+            el.saveVideoBtn.style.display = 'none';
+        });
+        el.videoBgBtn.addEventListener('click', () => {
+            el.videoBgBtn.classList.add('active');
+            el.imgBgBtn.classList.remove('active');
+            el.uploadVideoBtn.style.display = 'inline-block';
+            el.uploadImgBtn.style.display = 'none';
+            if (tempVideoFile) el.saveVideoBtn.style.display = 'inline-block';
+        });
+        el.uploadImgBtn.addEventListener('click', () => el.bgUpload.click());
+        el.bgUpload.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                el.customBg.src = e.target.result;
+                el.customBg.style.opacity = document.body.classList.contains('light-theme') ? 1 : 0.5;
+                el.dynamicBg.style.opacity = 0;
+                el.customVideoBg.style.opacity = 0;
+                bgState.activeType = 'image';
+                el.defaultBgToggle.checked = false;
+                localStorage.setItem('customBg', e.target.result);
+                el.storageSuccessTip.textContent = 'Image background applied successfully!';
+                el.storageSuccessTip.style.display = 'block';
+                setTimeout(() => { el.storageSuccessTip.style.display = 'none'; }, 3000);
+            };
+            reader.readAsDataURL(file);
+        });
+        el.defaultBgToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                el.dynamicBg.style.opacity = 1;
+                el.customBg.style.opacity = 0;
+                el.customVideoBg.style.opacity = 0;
+                bgState.activeType = 'default';
+            } else {
+                if (bgState.activeType === 'image' && el.customBg.src) {
+                    el.customBg.style.opacity = document.body.classList.contains('light-theme') ? 1 : 0.5;
+                    el.dynamicBg.style.opacity = 0;
+                } else if (bgState.activeType === 'video' && currentVideoUrl) {
+                    el.customVideoBg.style.opacity = document.body.classList.contains('light-theme') ? 1 : 0.5;
+                    el.dynamicBg.style.opacity = 0;
+                }
+            }
+        });
+        el.themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-theme');
+            const isLight = document.body.classList.contains('light-theme');
+            el.themeIcon.className = isLight ? 'fas fa-moon' : 'fas fa-sun';
+            localStorage.setItem('lightTheme', isLight);
+            if (bgState.activeType === 'image') {
+                el.customBg.style.opacity = isLight ? 1 : 0.5;
+            } else if (bgState.activeType === 'video') {
+                el.customVideoBg.style.opacity = isLight ? 1 : 0.5;
+            }
+            el.loaderPage.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bg');
+            el.searchLoading.style.background = getComputedStyle(document.documentElement).getPropertyValue('--surface');
+            el.searchLoading.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border');
+            el.loadingText.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text');
+            document.dispatchEvent(new Event('themeChanged'));
+        });
+
+        let suggestTimer = null;
+        const fallbackPool = ['未连接到Search Recommendation API......'];
+
+        function getFallback(keyword) {
+            const lower = keyword.toLowerCase();
+            const matched = fallbackPool.filter(item => item.toLowerCase().includes(lower));
+            if (matched.length >= 4) return matched.slice(0, 4);
+            const extra = fallbackPool.filter(item => !matched.includes(item)).slice(0, 4 - matched.length);
+            return [...matched, ...extra].slice(0, 4);
+        }
+
+        function renderSuggestions(list) {
+            const container = el.suggestionsBox;
+            container.innerHTML = '';
+            if (!list || list.length === 0) {
+                el.suggestionsContainer.classList.remove('active');
+                debug.log('📭 Suggestions empty, hiding panel', 'warn');
+                return;
+            }
+            const maxItems = Math.min(list.length, 4);
+            for (let i = 0; i < maxItems; i++) {
+                const text = list[i];
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.textContent = text;
+                item.addEventListener('click', () => {
+                    el.searchBox.value = text;
+                    el.suggestionsContainer.classList.remove('active');
+                    debug.log(`🖱️ Clicked suggestion: "${text}"`, 'info');
+                    searchWithLoading(text);
+                });
+                container.appendChild(item);
+            }
+            el.suggestionsContainer.classList.add('active');
+            debug.log(`✅ Rendered ${maxItems} suggestions: ${list.slice(0, maxItems).join('、')}`, 'ok');
+        }
+
+        function fetchSuggestions(keyword) {
+            const startTime = performance.now();
+            debug.log(`🔎 Input: "${keyword}"`, 'info');
+            const localList = getFallback(keyword);
+            renderSuggestions(localList);
+            debug.log(`📦 Fallback: ${localList.join('、')}`, 'warn');
+
+            fetch(`/api/suggest?q=${encodeURIComponent(keyword)}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response error');
+                    return response.json();
+                })
+                .then(data => {
+                    const elapsed = (performance.now() - startTime).toFixed(0);
+                    debug.logPerf('Suggest Request', elapsed + 'ms');
+                    if (Array.isArray(data) && data.length > 0) {
+                        const netList = data.slice(0, 4);
+                        renderSuggestions(netList);
+                        debug.log(`🌐 Proxy returned ${netList.length} suggestions: ${netList.join('、')}`, 'ok');
+                    } else {
+                        debug.log('⚠️ Proxy returned empty, keeping fallback', 'warn');
+                    }
+                })
+                .catch(err => {
+                    debug.log(`❌ Proxy request failed: ${err.message}`, 'error');
+                });
+        }
+
+        el.searchBox.addEventListener('input', function(e) {
+            const query = this.value.trim();
+            clearTimeout(suggestTimer);
+            if (!query || !el.suggestionsToggle.checked) {
+                el.suggestionsContainer.classList.remove('active');
+                debug.log('⏹️ Input empty or suggestions disabled', 'info');
+                return;
+            }
+            suggestTimer = setTimeout(() => {
+                fetchSuggestions(query);
+            }, 200);
+        });
+
+        el.searchBtn.addEventListener('click', () => {
+            const query = el.searchBox.value.trim();
+            if (query) searchWithLoading(query);
+        });
+        el.searchBox.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const query = el.searchBox.value.trim();
+                if (query) searchWithLoading(query);
+            }
+        });
+        el.uiEnhanceToggle.addEventListener('change', (e) => {
+            localStorage.setItem('uiEnhance', e.target.checked);
+            if (!e.target.checked) {
+                el.loaderPage.style.display = 'none';
+                el.mainContainer.style.opacity = 1;
+            }
+        });
+        el.safeSearchToggle.addEventListener('change', (e) => {
+            localStorage.setItem('safeSearch', e.target.checked);
+        });
+        el.searchSourceSelector.addEventListener('change', (e) => {
+            const selected = e.target.value;
+            localStorage.setItem('searchSource', selected);
+            showToast(`Switched to ${selected.charAt(0).toUpperCase() + selected.slice(1)} search`);
+        });
+        el.languageSelector.addEventListener('change', (e) => {
+            applyLanguage(e.target.value);
+            showToast(window.t('langSwitched'));
+            document.dispatchEvent(new Event('languageChanged'));
+        });
+        el.settingsBtn.addEventListener('click', () => {
+            el.docsPanel.classList.remove('active');
+            el.settingsPanel.classList.toggle('active');
+        });
+        el.closeSettings.addEventListener('click', () => {
+            el.settingsPanel.classList.remove('active');
+        });
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            debug.init();
+
+            initStartupLoader();
+
+            const isLight = localStorage.getItem('lightTheme') === 'true';
+            if (isLight) {
+                document.body.classList.add('light-theme');
+                el.themeIcon.className = 'fas fa-moon';
+            } else {
+                el.themeIcon.className = 'fas fa-sun';
+            }
+
+            const savedBg = localStorage.getItem('customBg');
+            if (savedBg) {
+                el.customBg.src = savedBg;
+                el.customBg.style.opacity = isLight ? 1 : 0.5;
+                el.dynamicBg.style.opacity = 0;
+                bgState.activeType = 'image';
+                el.defaultBgToggle.checked = false;
+            }
+            const savedVideo = await loadSavedVideo();
+            if (savedVideo) {
+                previewVideoFile(savedVideo.file);
+                el.defaultBgToggle.checked = false;
+                el.videoBgBtn.classList.add('active');
+                el.imgBgBtn.classList.remove('active');
+                el.uploadVideoBtn.style.display = 'inline-block';
+                el.uploadImgBtn.style.display = 'none';
+            }
+
+            const suggestionsEnabled = localStorage.getItem('suggestionsEnabled') !== 'false';
+            el.suggestionsToggle.checked = suggestionsEnabled;
+            el.suggestionsToggle.addEventListener('change', (e) => {
+                localStorage.setItem('suggestionsEnabled', e.target.checked);
+            });
+
+            const safeSearchEnabled = localStorage.getItem('safeSearch') === 'true';
+            el.safeSearchToggle.checked = safeSearchEnabled;
+            const savedSearchSource = localStorage.getItem('searchSource') || 'bing';
+            el.searchSourceSelector.value = savedSearchSource;
+            const uiEnhanceEnabled = localStorage.getItem('uiEnhance') !== 'false';
+            el.uiEnhanceToggle.checked = uiEnhanceEnabled;
+            const savedLang = localStorage.getItem('uiLang') || 'en';
+            el.languageSelector.value = savedLang;
+            applyLanguage(savedLang);
+
+            if (debug.enabled) {
+                debug.log('🚀 Furry Search Engine ready (enhanced debug)', 'info');
+                debug.log('💡 Server must be running: node server.js', 'warn');
+            }
+        });
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        (function() {
+            window.addEventListener('load', function() {
+                const panel = document.getElementById('settingsPanel');
+                if (!panel) return;
+                const btn = document.createElement('button');
+                btn.id = 'networkMonitorBtn';
+                btn.className = 'bg-type-btn active';
+                btn.style.marginTop = '15px';
+                btn.textContent = (window.t ? window.t('networkMonitor') : "Network Monitor");
+                panel.appendChild(btn);
+
+                const modal = document.createElement('div');
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                modal.style.display = 'none';
+                modal.style.zIndex = '9999';
+                modal.style.justifyContent = 'center';
+                modal.style.alignItems = 'center';
+                modal.style.backdropFilter = 'blur(5px)';
+                window.monitorModal = modal;
+
+                const content = document.createElement('div');
+                content.style.borderRadius = '12px';
+                content.style.padding = '20px';
+                content.style.width = '850px';
+                content.style.maxWidth = '90%';
+                content.style.maxHeight = '90%';
+                content.style.position = 'relative';
+                content.style.overflow = 'hidden';
+                content.style.backdropFilter = 'blur(10px)';
+
+                const header = document.createElement('div');
+                header.style.display = 'flex';
+                header.style.justifyContent = 'space-between';
+                header.style.alignItems = 'center';
+                header.style.marginBottom = '20px';
+
+                const title = document.createElement('h3');
+                title.id = 'networkMonitorTitle';
+                title.textContent = (window.t ? window.t('networkMonitor') : "Network Monitor");
+                title.style.margin = '0';
+
+                const closeBtn = document.createElement('button');
+                closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                closeBtn.style.background = 'none';
+                closeBtn.style.border = 'none';
+                closeBtn.style.fontSize = '20px';
+                closeBtn.style.cursor = 'pointer';
+
+                header.appendChild(title);
+                header.appendChild(closeBtn);
+
+                const stats = document.createElement('div');
+                stats.style.display = 'flex';
+                stats.style.gap = '40px';
+                stats.style.marginBottom = '20px';
+
+                const dlStat = document.createElement('div');
+                dlStat.id = 'dlStat';
+                dlStat.style.padding = '10px 20px';
+                dlStat.style.borderRadius = '8px';
+                dlStat.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                dlStat.style.fontSize = '18px';
+                dlStat.textContent = (window.t ? window.t('download') : "Download") + ': 0.00 KB/s';
+
+                const ulStat = document.createElement('div');
+                ulStat.id = 'ulStat';
+                ulStat.style.padding = '10px 20px';
+                ulStat.style.borderRadius = '8px';
+                ulStat.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                ulStat.style.fontSize = '18px';
+                ulStat.textContent = (window.t ? window.t('upload') : "Upload") + ': 0.00 KB/s';
+
+                stats.appendChild(dlStat);
+                stats.appendChild(ulStat);
+
+                const canvas = document.createElement('canvas');
+                canvas.id = 'speedChart';
+                canvas.width = 800;
+                canvas.height = 450;
+                canvas.style.width = '100%';
+                canvas.style.height = '450px';
+                canvas.style.borderRadius = '8px';
+                canvas.style.padding = '15px';
+                canvas.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                canvas.style.flexShrink = '0';
+
+                content.appendChild(header);
+                content.appendChild(stats);
+                content.appendChild(canvas);
+                modal.appendChild(content);
+                document.body.appendChild(modal);
+
+                let chart;
+                window.speedChart = chart;
+
+                function initChart(isDark) {
+                    if (chart) chart.destroy();
+                    const darkBg = 'rgba(30,30,46,0.8)';
+                    const lightBg = 'rgba(245,245,247,0.8)';
+                    const darkContent = 'rgba(42,42,61,0.8)';
+                    const lightContent = 'rgba(255,255,255,0.8)';
+
+                    content.style.backgroundColor = isDark ? darkContent : lightContent;
+                    dlStat.style.backgroundColor = isDark ? darkBg : lightBg;
+                    ulStat.style.backgroundColor = isDark ? darkBg : lightBg;
+                    canvas.style.backgroundColor = isDark ? darkBg : lightBg;
+                    title.style.color = isDark ? '#ffffff' : '#333333';
+                    closeBtn.style.color = isDark ? '#ffffff' : '#333333';
+                    dlStat.style.color = isDark ? '#ffffff' : '#333333';
+                    ulStat.style.color = isDark ? '#ffffff' : '#333333';
+
+                    const ctx = canvas.getContext('2d');
+                    chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: [{
+                                label: (window.t ? window.t('download') : "Download"),
+                                data: [],
+                                borderColor: '#0099ff',
+                                backgroundColor: 'rgba(0,153,255,0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                borderWidth: 2
+                            }, {
+                                label: (window.t ? window.t('upload') : "Upload"),
+                                data: [],
+                                borderColor: '#ff3366',
+                                backgroundColor: 'rgba(255,51,102,0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    ticks: { color: isDark ? '#ffffff' : '#333333', maxTicksLimit: 10 },
+                                    grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }
+                                },
+                                y: {
+                                    ticks: { color: isDark ? '#ffffff' : '#333333' },
+                                    grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' },
+                                    beginAtZero: true,
+                                    min: 0
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    labels: { color: isDark ? '#ffffff' : '#333333' }
+                                }
+                            }
+                        }
+                    });
+                    window.speedChart = chart;
+                }
+
+                function updateTheme() {
+                    const isDark = document.body.classList.contains('dark-theme') || !document.body.classList.contains('light-theme');
+                    initChart(isDark);
+                }
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.attributeName === 'class') {
+                            updateTheme();
+                        }
+                    });
+                });
+                observer.observe(document.body, { attributes: true });
+                updateTheme();
+
+                async function testDownload() {
+                    try {
+                        const start = Date.now();
+                        const res = await fetch('https://speed.cloudflare.com/__down?bytes=1048576', { cache: 'no-store' });
+                        const blob = await res.blob();
+                        const end = Date.now();
+                        const duration = (end - start) / 1000;
+                        const speed = (blob.size / 1024) / duration;
+                        return speed;
+                    } catch (e) {
+                        if (navigator.connection && navigator.connection.downlink) {
+                            return navigator.connection.downlink * 128;
+                        }
+                        return 0;
+                    }
+                }
+
+                async function testUpload() {
+                    try {
+                        const start = Date.now();
+                        const data = new Blob([new Uint8Array(1024 * 1024)]);
+                        const res = await fetch('https://httpbin.org/post', {
+                            method: 'POST',
+                            body: data,
+                            cache: 'no-store'
+                        });
+                        const end = Date.now();
+                        const duration = (end - start) / 1000;
+                        const speed = (data.size / 1024) / duration;
+                        return speed;
+                    } catch (e) {
+                        return 0;
+                    }
+                }
+
+                let interval;
+                let lastDl = 0,
+                    lastUl = 0;
+
+                window.refreshMonitorLabels = function() {
+                    dlStat.textContent = (window.t ? window.t('download') : "Download") + ': ' + lastDl.toFixed(2) + ' KB/s';
+                    ulStat.textContent = (window.t ? window.t('upload') : "Upload") + ': ' + lastUl.toFixed(2) + ' KB/s';
+                    if (chart) {
+                        chart.data.datasets[0].label = (window.t ? window.t('download') : "Download");
+                        chart.data.datasets[1].label = (window.t ? window.t('upload') : "Upload");
+                        chart.update();
+                    }
+                };
+
+                async function update() {
+                    const dl = await testDownload();
+                    const ul = await testUpload();
+                    lastDl = dl;
+                    lastUl = ul;
+                    dlStat.textContent = (window.t ? window.t('download') : "Download") + ': ' + dl.toFixed(2) + ' KB/s';
+                    ulStat.textContent = (window.t ? window.t('upload') : "Upload") + ': ' + ul.toFixed(2) + ' KB/s';
+
+                    const now = new Date().toLocaleTimeString();
+                    chart.data.labels.push(now);
+                    chart.data.datasets[0].data.push(dl);
+                    chart.data.datasets[1].data.push(ul);
+
+                    if (chart.data.labels.length > 20) {
+                        chart.data.labels.shift();
+                        chart.data.datasets[0].data.shift();
+                        chart.data.datasets[1].data.shift();
+                    }
+
+                    const allData = [...chart.data.datasets[0].data, ...chart.data.datasets[1].data];
+                    const currentMax = Math.max(...allData);
+                    const newMax = Math.max(currentMax * 1.2, 100);
+                    chart.options.scales.y.max = newMax;
+                    chart.update();
+                }
+
+                btn.addEventListener('click', function() {
+                    modal.style.display = 'flex';
+                    update();
+                    interval = setInterval(update, 2000);
+                });
+                closeBtn.addEventListener('click', function() {
+                    modal.style.display = 'none';
+                    clearInterval(interval);
+                });
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                        clearInterval(interval);
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
